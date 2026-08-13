@@ -102,9 +102,25 @@ test("requires SimpleAdmin's explicit success response for bans", () => {
     ),
     true,
   );
+  for (const playerName of ["already banned", "unknown command", "failed to"]) {
+    assert.equal(
+      punishmentSucceeded(
+        ban,
+        `[CSS] ${playerName} with Steam ID 76561190000000001 has been banned for 120 minutes.`,
+      ),
+      true,
+    );
+  }
   assert.equal(punishmentSucceeded(ban, ""), false);
   assert.equal(
     punishmentSucceeded(ban, 'Unknown command "css_ban"'),
+    false,
+  );
+  assert.equal(
+    punishmentSucceeded(
+      ban,
+      "with Steam ID 76561190000000001 has been banned for 120 minutes. is already banned.",
+    ),
     false,
   );
   assert.equal(

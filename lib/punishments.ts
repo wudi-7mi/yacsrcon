@@ -59,13 +59,15 @@ export function punishmentFailed(response: string) {
 }
 
 export function punishmentSucceeded(value: Punishment, response: string) {
-  if (punishmentFailed(response)) return false;
-  if (value.action !== "ban") return true;
+  if (value.action === "ban") {
+    const success = new RegExp(
+      `with Steam ID ${value.steamId} has been banned(?: for \\d+ minutes?)?\\.$`,
+      "i",
+    );
+    return response.split(/\r?\n/).some((line) => success.test(line.trim()));
+  }
 
-  return new RegExp(
-    `with Steam ID ${value.steamId} has been banned(?: for \\d+ minutes?)?\\.`,
-    "i",
-  ).test(response);
+  return !punishmentFailed(response);
 }
 
 export function normalizeBanRecords(
