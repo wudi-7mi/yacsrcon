@@ -122,6 +122,10 @@ export class RconService {
     return result;
   }
 
+  async players() {
+    return parsePlayers(await this.execute("status"));
+  }
+
   async dashboard(): Promise<DashboardData> {
     const started = Date.now();
     try {

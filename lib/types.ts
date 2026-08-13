@@ -73,3 +73,12 @@ export type AdminConfiguration = {
   overrides: Record<string, unknown>;
   backupDirectory?: string;
 };
+
+export type BanRecord = {
+  steamId: string;
+  playerName: string | null;
+  minutes: number;
+  createdAt: string;
+  expiresAt: string | null;
+  expired: boolean;
+};

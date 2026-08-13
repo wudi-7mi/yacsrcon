@@ -4,6 +4,7 @@ import json
 import os
 import re
 import shutil
+import sqlite3
 import sys
 import tempfile
 
@@ -17,6 +18,7 @@ FILES = {
 FLAG = re.compile(r"^@[a-zA-Z0-9_-]+/[a-zA-Z0-9_.-]+$")
 GROUP = re.compile(r"^#[a-zA-Z0-9_-]+/[a-zA-Z0-9_.-]+$")
 STEAM_ID = re.compile(r"^7656119\d{10}$")
+BAN_DATABASE = "/home/steam/cs2/game/csgo/addons/counterstrikesharp/plugins/SimpleAdmin/bans.db"
 
 
 def fail(message):
@@ -103,6 +105,39 @@ def read_config():
     return validate(result)
 
 
+def read_bans():
+    database = sqlite3.connect(f"file:{BAN_DATABASE}?mode=ro", uri=True)
+    database.row_factory = sqlite3.Row
+    try:
+        columns = {
+            row["name"]: row["type"]
+            for row in database.execute("PRAGMA table_info(banned_users)")
+        }
+        expected = {
+            "steam_id": "TEXT",
+            "username": "TEXT",
+            "minutes_banned": "INT",
+            "timestamp": "TIMESTAMP",
+        }
+        if columns != expected:
+            fail("SimpleAdmin 封禁数据库结构不受支持")
+        rows = database.execute(
+            "SELECT steam_id, username, minutes_banned, timestamp "
+            "FROM banned_users ORDER BY timestamp DESC"
+        ).fetchall()
+        return [
+            {
+                "steamId": row["steam_id"],
+                "playerName": row["username"],
+                "minutes": row["minutes_banned"],
+                "createdAt": row["timestamp"],
+            }
+            for row in rows
+        ]
+    finally:
+        database.close()
+
+
 def stage_json(filename, value):
     target = os.path.join(CONFIG_DIR, filename)
     owner = os.stat(target)
@@ -179,11 +214,13 @@ def apply_config(data):
 
 
 def main():
-    if len(sys.argv) != 2 or sys.argv[1] not in ("read", "apply"):
-        fail("用法：yacsrcon-admin-helper read|apply")
+    if len(sys.argv) != 2 or sys.argv[1] not in ("read", "apply", "bans"):
+        fail("用法：yacsrcon-admin-helper read|apply|bans")
 
     if sys.argv[1] == "read":
         print(json.dumps(read_config(), ensure_ascii=False))
+    elif sys.argv[1] == "bans":
+        print(json.dumps(read_bans(), ensure_ascii=False))
     else:
         raw = sys.stdin.buffer.read(1024 * 1024 + 1)
         if len(raw) > 1024 * 1024:

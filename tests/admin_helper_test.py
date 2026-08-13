@@ -2,6 +2,7 @@ import importlib.util
 from importlib.machinery import SourceFileLoader
 import json
 import os
+import sqlite3
 import tempfile
 import unittest
 from unittest import mock
@@ -56,6 +57,38 @@ class AdminHelperTransactionTest(unittest.TestCase):
             for key, filename in helper.FILES.items():
                 with open(os.path.join(directory, filename), encoding="utf-8") as handle:
                     self.assertEqual(json.load(handle), original[key])
+
+    def test_reads_simple_admin_bans_without_writing_database(self):
+        helper = load_helper()
+        with tempfile.TemporaryDirectory() as directory:
+            database_path = os.path.join(directory, "bans.db")
+            database = sqlite3.connect(database_path)
+            database.execute(
+                "CREATE TABLE banned_users ("
+                "steam_id TEXT PRIMARY KEY, username TEXT, "
+                "minutes_banned INT, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+            )
+            database.execute(
+                "INSERT INTO banned_users VALUES (?, ?, ?, ?)",
+                ("76561197960265731", "Player", 120, "2026-08-13 08:00:00"),
+            )
+            database.commit()
+            database.close()
+            before = os.stat(database_path).st_mtime_ns
+            helper.BAN_DATABASE = database_path
+
+            self.assertEqual(
+                helper.read_bans(),
+                [
+                    {
+                        "steamId": "76561197960265731",
+                        "playerName": "Player",
+                        "minutes": 120,
+                        "createdAt": "2026-08-13 08:00:00",
+                    }
+                ],
+            )
+            self.assertEqual(os.stat(database_path).st_mtime_ns, before)
 
 
 if __name__ == "__main__":

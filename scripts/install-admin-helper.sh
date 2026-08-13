@@ -13,8 +13,8 @@ temporary=$(mktemp)
 trap 'rm -f "$temporary"' EXIT
 
 install -o root -g root -m 0755 "$project_dir/system/yacsrcon-admin-helper" "$helper"
-printf '%s ALL=(root) NOPASSWD: %s read, %s apply\n' \
-  "$app_user" "$helper" "$helper" > "$temporary"
+printf '%s ALL=(root) NOPASSWD: %s read, %s apply, %s bans\n' \
+  "$app_user" "$helper" "$helper" "$helper" > "$temporary"
 chmod 0440 "$temporary"
 visudo -cf "$temporary"
 install -o root -g root -m 0440 "$temporary" "$sudoers"

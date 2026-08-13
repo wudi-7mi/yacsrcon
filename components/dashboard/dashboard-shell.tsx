@@ -199,7 +199,11 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
             <OverviewView data={data} setDashboardTab={selectTab} />
           )}{" "}
           {tab === "players" && (
-            <PlayersView data={data} onCommand={consoleSession.sendCommand} />
+            <PlayersView
+              data={data}
+              onUnauthorized={handleUnauthorized}
+              onRefresh={() => void refresh()}
+            />
           )}{" "}
           {tab === "maps" && (
             <MapsView

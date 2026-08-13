@@ -33,7 +33,15 @@ The web process does not receive general write access to `/home/steam`. Install 
 sudo sh scripts/install-admin-helper.sh wudi7mi
 ```
 
-The installer creates a root-owned `/usr/local/sbin/yacsrcon-admin-helper` and a sudoers rule limited to its `read` and `apply` actions. The helper only accesses `admins.json`, `admin_groups.json`, and `admin_overrides.json` in the fixed CounterStrikeSharp config directory. Every apply validates the complete document, writes through same-directory temporary files, and stores the previous files under `configs/backups/yacsrcon/`.
+The installer creates a root-owned `/usr/local/sbin/yacsrcon-admin-helper` and
+a sudoers rule limited to its `read`, `apply`, and `bans` actions. The helper
+only accesses `admins.json`, `admin_groups.json`, and `admin_overrides.json` in
+the fixed CounterStrikeSharp config directory, plus read-only access to
+SimpleAdmin's fixed `bans.db` path. Every administrator configuration apply
+validates the complete document, writes through same-directory temporary
+files, and stores the previous files under `configs/backups/yacsrcon/`. Ban and
+unban writes always use SimpleAdmin RCON commands; the helper never writes its
+SQLite database.
 
 For a container deployment, install the helper on the host and expose it through a deliberately configured host-side service. Do not mount the Docker socket or grant the container unrestricted sudo access.
 
@@ -77,7 +85,7 @@ journal.
 
 - Single admin login
 - Live status, map, player count, latency and plugin checks
-- Player list with kick actions
+- Online kick/slay/ban actions, offline SteamID64 bans, and SimpleAdmin ban management
 - CounterStrikeSharp administrator and permission-group management
 - Map and mode/CFG shortcuts
 - Full RCON console with command history in the session and confirmation for high-impact commands

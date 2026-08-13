@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { z } from "zod";
-import { config } from "./config";
-import type { AdminConfiguration } from "./types";
+import { config } from "./config.ts";
+import type { AdminConfiguration } from "./types.ts";
 
 const safeName = z
   .string()
@@ -62,7 +62,10 @@ export const adminConfigurationSchema = z
     }
   });
 
-async function helper(action: "read" | "apply", input?: string) {
+export async function runAdminHelper(
+  action: "read" | "apply" | "bans",
+  input?: string,
+) {
   return new Promise<{ stdout: string }>((resolve, reject) => {
     const child = spawn("sudo", ["-n", config.ADMIN_HELPER_PATH, action], {
       stdio: ["pipe", "pipe", "pipe"],
@@ -94,13 +97,13 @@ async function helper(action: "read" | "apply", input?: string) {
 }
 
 export async function readAdminConfiguration(): Promise<AdminConfiguration> {
-  const { stdout } = await helper("read");
+  const { stdout } = await runAdminHelper("read");
   const value = JSON.parse(stdout);
   return adminConfigurationSchema.parse(value) as AdminConfiguration;
 }
 
 export async function writeAdminConfiguration(value: unknown) {
   const parsed = adminConfigurationSchema.parse(value);
-  const { stdout } = await helper("apply", JSON.stringify(parsed));
+  const { stdout } = await runAdminHelper("apply", JSON.stringify(parsed));
   return JSON.parse(stdout) as { backupDirectory: string };
 }
