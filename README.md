@@ -47,6 +47,11 @@ files, and stores the previous files under `configs/backups/yacsrcon/`. Ban and
 unban writes always use SimpleAdmin RCON commands; the helper never writes its
 SQLite database.
 
+The audit center reads up to 200 recent matching records and skips malformed
+JSONL lines without hiding valid entries. The active audit file rotates at 5
+MiB by default and retains two older files. Set `AUDIT_MAX_BYTES` to adjust the
+threshold.
+
 For a container deployment, install the helper on the host and expose it through a deliberately configured host-side service. Do not mount the Docker socket or grant the container unrestricted sudo access.
 
 ## Docker

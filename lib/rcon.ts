@@ -86,7 +86,7 @@ export class RconService {
     }
   }
 
-  private async executeNow(command: string) {
+  private async executeNow(command: string, recordAudit: boolean) {
     const client = await this.getClient();
     const started = Date.now();
     try {
@@ -97,24 +97,38 @@ export class RconService {
         () => this.discardClient(client),
       );
       const response = typeof result === "string" ? result : "";
-      void this.recordAudit("command", {
-        command,
-        response: response.slice(0, 2000),
-        latencyMs: Date.now() - started,
-      });
+      if (recordAudit) {
+        void this.recordAudit("command", {
+          command,
+          response: response.slice(0, 2000),
+          latencyMs: Date.now() - started,
+        });
+      }
       return response;
     } catch (error) {
       this.discardClient(client);
-      void this.recordAudit("command_error", {
-        command,
-        error: error instanceof Error ? error.message : String(error),
-      });
+      if (recordAudit) {
+        void this.recordAudit("command_error", {
+          command,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
       throw error;
     }
   }
 
   execute(command: string) {
-    const result = this.commandQueue.then(() => this.executeNow(command));
+    return this.enqueue(command, true);
+  }
+
+  executeInternal(command: string) {
+    return this.enqueue(command, false);
+  }
+
+  private enqueue(command: string, recordAudit: boolean) {
+    const result = this.commandQueue.then(() =>
+      this.executeNow(command, recordAudit),
+    );
     this.commandQueue = result.then(
       () => undefined,
       () => undefined,
@@ -123,18 +137,18 @@ export class RconService {
   }
 
   async players() {
-    return parsePlayers(await this.execute("status"));
+    return parsePlayers(await this.executeInternal("status"));
   }
 
   async dashboard(): Promise<DashboardData> {
     const started = Date.now();
     try {
-      const statusRaw = await this.execute("status");
+      const statusRaw = await this.executeInternal("status");
       // Keep commands sequential because Source RCON responses may arrive in
       // multiple packets and some clients cannot safely multiplex them.
-      const pluginsRaw = await this.execute("css_plugins list");
-      const metaVersionRaw = await this.execute("meta version");
-      const metaPluginsRaw = await this.execute("meta list");
+      const pluginsRaw = await this.executeInternal("css_plugins list");
+      const metaVersionRaw = await this.executeInternal("meta version");
+      const metaPluginsRaw = await this.executeInternal("meta list");
       const metaRaw = `${metaVersionRaw}\n${metaPluginsRaw}`;
       return {
         connected: true,

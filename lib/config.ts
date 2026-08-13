@@ -13,6 +13,12 @@ const envSchema = z.object({
   DATABASE_PATH: z.string().default("./data/yacsrcon.db"),
   SESSION_PATH: z.string().min(1).optional(),
   AUDIT_PATH: z.string().min(1).optional(),
+  AUDIT_MAX_BYTES: z.coerce
+    .number()
+    .int()
+    .min(64 * 1024)
+    .max(100 * 1024 * 1024)
+    .default(5 * 1024 * 1024),
   ADMIN_HELPER_PATH: z
     .string()
     .default("/usr/local/sbin/yacsrcon-admin-helper"),
@@ -30,6 +36,7 @@ const environment = envSchema.parse({
   DATABASE_PATH: process.env.DATABASE_PATH,
   SESSION_PATH: process.env.SESSION_PATH,
   AUDIT_PATH: process.env.AUDIT_PATH,
+  AUDIT_MAX_BYTES: process.env.AUDIT_MAX_BYTES,
   ADMIN_HELPER_PATH: process.env.ADMIN_HELPER_PATH,
 });
 

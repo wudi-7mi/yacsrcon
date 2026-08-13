@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     }
 
     const command = punishmentCommand(value);
-    const response = await rcon.execute(command);
+    const response = await rcon.executeInternal(command);
     if (!punishmentSucceeded(value, response)) {
       return NextResponse.json(
         { error: response.trim() || "SimpleAdmin 未能执行处罚。" },
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       );
     }
     await audit("player_punishment", {
-      action: value.action,
+      operation: value.action,
       steamId: value.steamId,
       playerName: "playerName" in value ? value.playerName : undefined,
       userid: "userid" in value ? value.userid : undefined,

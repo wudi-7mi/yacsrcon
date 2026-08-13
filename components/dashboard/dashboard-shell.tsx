@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Activity,
   AlertTriangle,
+  FileClock,
   ChevronRight,
   Clock3,
   LogOut,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import AdminManager from "@/components/admin-manager";
 import {
+  AuditView,
   ConsoleView,
   MapsView,
   OverviewView,
@@ -111,6 +113,7 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
     { id: "players", label: "玩家管理", icon: Users },
     { id: "maps", label: "地图与模式", icon: Map },
     { id: "admins", label: "管理员与权限", icon: ShieldCheck },
+    { id: "audit", label: "操作审计", icon: FileClock },
     { id: "console", label: "RCON 控制台", icon: Terminal },
   ] as const;
   return (
@@ -219,6 +222,9 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
               onDraftChange={setAdminDraft}
               onUnauthorized={handleUnauthorized}
             />
+          )}{" "}
+          {tab === "audit" && (
+            <AuditView onUnauthorized={handleUnauthorized} />
           )}{" "}
           {tab === "console" && (
             <ConsoleView

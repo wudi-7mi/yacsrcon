@@ -60,3 +60,22 @@ test("audit storage failure does not change a successful command result", async 
   assert.equal(await service.execute("status"), "command completed");
   assert.equal(client.connection.destroyed, false);
 });
+
+test("internal commands share the queue without writing audit entries", async () => {
+  const actions: string[] = [];
+  const client = fakeClient(async (command) => `ok:${command}`);
+  const service = new RconService({
+    createClient: () => client,
+    auditEvent: async (action) => {
+      actions.push(action);
+      return true;
+    },
+  });
+
+  assert.equal(await service.executeInternal("status"), "ok:status");
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.deepEqual(actions, []);
+  assert.equal(await service.execute("say hello"), "ok:say hello");
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.deepEqual(actions, ["command"]);
+});

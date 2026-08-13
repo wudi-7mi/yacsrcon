@@ -35,7 +35,7 @@ export async function PUT(request: Request) {
         "css_overrides_reload",
         "css_admins_reload",
       ]) {
-        const response = await rcon.execute(command);
+        const response = await rcon.executeInternal(command);
         if (/unknown command|error|failed/i.test(response)) {
           throw new Error(`${command}: ${response.trim()}`);
         }

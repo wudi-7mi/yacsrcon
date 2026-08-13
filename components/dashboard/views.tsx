@@ -1,3 +1,4 @@
+export { AuditView } from "@/components/dashboard/audit-view";
 export { ConsoleView } from "@/components/dashboard/console-view";
 export { MapsView } from "@/components/dashboard/maps-view";
 export { OverviewView } from "@/components/dashboard/overview-view";

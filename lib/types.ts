@@ -82,3 +82,14 @@ export type BanRecord = {
   expiresAt: string | null;
   expired: boolean;
 };
+
+export type AuditEntry = {
+  at: string;
+  action: string;
+  [key: string]: unknown;
+};
+
+export type AuditResult = {
+  entries: AuditEntry[];
+  malformed: number;
+};
