@@ -9,6 +9,7 @@ const {
   punishmentCommand,
   punishmentFailed,
   punishmentSchema,
+  punishmentSucceeded,
   normalizeBanRecords,
 } = await import("../lib/punishments.ts");
 
@@ -78,9 +79,40 @@ test("rejects unsafe punishment input", () => {
 test("recognizes SimpleAdmin failure responses", () => {
   assert.equal(punishmentFailed("Player is already banned."), true);
   assert.equal(punishmentFailed("Couldn't find user by identifier #5"), true);
+  assert.equal(punishmentFailed('Unknown command "css_ban"'), true);
+  assert.equal(punishmentFailed("Command css_ban does not exist"), true);
+  assert.equal(punishmentFailed("Command 'css_ban' not found"), true);
   assert.equal(
     punishmentFailed("Player with Steam ID 76561190000000001 has been banned."),
     false,
+  );
+});
+
+test("requires SimpleAdmin's explicit success response for bans", () => {
+  const ban = {
+    action: "ban" as const,
+    confirm: true as const,
+    steamId: "76561190000000001",
+    minutes: 120,
+  };
+  assert.equal(
+    punishmentSucceeded(
+      ban,
+      "[CSS] [unnamed] with Steam ID 76561190000000001 has been banned for 120 minutes.",
+    ),
+    true,
+  );
+  assert.equal(punishmentSucceeded(ban, ""), false);
+  assert.equal(
+    punishmentSucceeded(ban, 'Unknown command "css_ban"'),
+    false,
+  );
+  assert.equal(
+    punishmentSucceeded(
+      { ...ban, action: "unban" },
+      "",
+    ),
+    true,
   );
 });
 

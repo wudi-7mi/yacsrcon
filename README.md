@@ -27,11 +27,15 @@ The script uses the deployment paths under `/home/steam/cs2/game/csgo` by defaul
 
 ## CounterStrikeSharp administrator helper
 
-The web process does not receive general write access to `/home/steam`. Install the restricted helper once on the CS2 host, passing the operating-system user that runs YACSRCON:
+The web process does not receive general write access to `/home/steam`. Install the restricted helper on the CS2 host, passing the operating-system user that runs YACSRCON:
 
 ```bash
 sudo sh scripts/install-admin-helper.sh wudi7mi
 ```
+
+Run the installer again after upgrading YACSRCON. It replaces the root-owned
+helper and its sudoers rule so newly added restricted actions, such as ban-list
+access, are available to the updated application.
 
 The installer creates a root-owned `/usr/local/sbin/yacsrcon-admin-helper` and
 a sudoers rule limited to its `read`, `apply`, and `bans` actions. The helper

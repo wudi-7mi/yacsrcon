@@ -5,8 +5,8 @@ import { audit } from "@/lib/audit";
 import { isAuthenticated } from "@/lib/auth";
 import {
   punishmentCommand,
-  punishmentFailed,
   punishmentSchema,
+  punishmentSucceeded,
   readBans,
 } from "@/lib/punishments";
 import { rcon } from "@/lib/rcon";
@@ -43,22 +43,11 @@ export async function POST(request: Request) {
 
     const command = punishmentCommand(value);
     const response = await rcon.execute(command);
-    if (punishmentFailed(response)) {
+    if (!punishmentSucceeded(value, response)) {
       return NextResponse.json(
         { error: response.trim() || "SimpleAdmin 未能执行处罚。" },
         { status: 502 },
       );
-    }
-    let warning: string | undefined;
-    if (value.action === "ban" && value.userid) {
-      try {
-        const kickResponse = await rcon.execute(`css_kick #${value.userid}`);
-        if (punishmentFailed(kickResponse)) {
-          warning = `封禁已生效，但踢出失败：${kickResponse.trim()}`;
-        }
-      } catch (error) {
-        warning = `封禁已生效，但踢出失败：${error instanceof Error ? error.message : String(error)}`;
-      }
     }
     await audit("player_punishment", {
       action: value.action,
@@ -67,9 +56,8 @@ export async function POST(request: Request) {
       userid: "userid" in value ? value.userid : undefined,
       minutes: "minutes" in value ? value.minutes : undefined,
       reason: "reason" in value ? value.reason : undefined,
-      warning,
     });
-    return NextResponse.json({ ok: true, response, warning });
+    return NextResponse.json({ ok: true, response });
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json(

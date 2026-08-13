@@ -49,7 +49,7 @@ export function PlayersView({
   }, [loadBans]);
 
   async function execute(payload: Record<string, unknown>) {
-    const result = await request<{ ok: true; warning?: string }>(
+    await request<{ ok: true }>(
       "/api/punishments",
       {
         method: "POST",
@@ -57,7 +57,7 @@ export function PlayersView({
         body: JSON.stringify({ ...payload, confirm: true }),
       },
     );
-    setNotice(result.warning ?? "操作已执行。");
+    setNotice("操作已执行。");
     setError("");
     await loadBans();
     onRefresh();

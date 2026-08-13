@@ -53,9 +53,19 @@ export function punishmentCommand(value: Punishment) {
 }
 
 export function punishmentFailed(response: string) {
-  return /couldn't|invalid ban length|already banned|expected usage|failed to/i.test(
+  return /couldn't|invalid ban length|already banned|expected usage|failed to|unknown command|command(?:\s+['"]?[^\r\n'"]+['"]?)?\s+(?:does not exist|not found)/i.test(
     response,
   );
+}
+
+export function punishmentSucceeded(value: Punishment, response: string) {
+  if (punishmentFailed(response)) return false;
+  if (value.action !== "ban") return true;
+
+  return new RegExp(
+    `with Steam ID ${value.steamId} has been banned(?: for \\d+ minutes?)?\\.`,
+    "i",
+  ).test(response);
 }
 
 export function normalizeBanRecords(
