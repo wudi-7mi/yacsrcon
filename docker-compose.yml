@@ -1,0 +1,11 @@
+services:
+  yacsrcon:
+    build: .
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env.local
+    environment:
+      DATABASE_PATH: /app/data/yacsrcon.db
+    volumes:
+      - ./data:/app/data

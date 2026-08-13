@@ -1,0 +1,156 @@
+#!/usr/bin/python3
+import datetime
+import json
+import os
+import re
+import shutil
+import sys
+import tempfile
+
+CONFIG_DIR = "/home/steam/cs2/game/csgo/addons/counterstrikesharp/configs"
+BACKUP_DIR = os.path.join(CONFIG_DIR, "backups", "yacsrcon")
+FILES = {
+    "admins": "admins.json",
+    "groups": "admin_groups.json",
+    "overrides": "admin_overrides.json",
+}
+FLAG = re.compile(r"^@[a-zA-Z0-9_-]+/[a-zA-Z0-9_.-]+$")
+GROUP = re.compile(r"^#[a-zA-Z0-9_-]+/[a-zA-Z0-9_.-]+$")
+STEAM_ID = re.compile(r"^7656119\d{10}$")
+
+
+def fail(message):
+    print(message, file=sys.stderr)
+    raise SystemExit(1)
+
+
+def require_object(value, label):
+    if not isinstance(value, dict):
+        fail(f"{label} 必须是 JSON 对象")
+
+
+def require_string_list(value, pattern, label, maximum=100):
+    if value is None:
+        return
+    if (
+        not isinstance(value, list)
+        or len(value) > maximum
+        or any(not isinstance(item, str) or not pattern.fullmatch(item) for item in value)
+    ):
+        fail(f"{label} 格式无效")
+
+
+def valid_immunity(value):
+    return (
+        value is None
+        or isinstance(value, int)
+        and not isinstance(value, bool)
+        and 0 <= value <= 999
+    )
+
+
+def validate(data):
+    require_object(data, "配置")
+    for key in FILES:
+        require_object(data.get(key), key)
+    if len(data["admins"]) > 1000:
+        fail("管理员数量超过限制")
+    if len(data["groups"]) > 100:
+        fail("权限组数量超过限制")
+
+    for name, admin in data["admins"].items():
+        if not isinstance(name, str) or not name or len(name) > 64 or re.search(r"[\x00-\x1f]", name):
+            fail("管理员名称格式无效")
+        require_object(admin, f"管理员 {name}")
+        if not isinstance(admin.get("identity"), str) or not STEAM_ID.fullmatch(admin["identity"]):
+            fail(f"管理员 {name} 的 SteamID64 无效")
+        if not valid_immunity(admin.get("immunity")):
+            fail(f"管理员 {name} 的免疫等级无效")
+        require_string_list(admin.get("flags"), FLAG, f"管理员 {name} 的权限")
+        require_string_list(admin.get("groups"), GROUP, f"管理员 {name} 的权限组", 20)
+        for group in admin.get("groups", []):
+            if group not in data["groups"]:
+                fail(f"管理员 {name} 引用了不存在的权限组 {group}")
+        overrides = admin.get("command_overrides")
+        if overrides is not None:
+            require_object(overrides, f"管理员 {name} 的命令覆盖")
+            if any(
+                not isinstance(command, str)
+                or not command
+                or len(command) > 80
+                or not isinstance(enabled, bool)
+                for command, enabled in overrides.items()
+            ):
+                fail(f"管理员 {name} 的命令覆盖无效")
+
+    for name, group in data["groups"].items():
+        if not isinstance(name, str) or not GROUP.fullmatch(name):
+            fail(f"权限组名称无效：{name}")
+        require_object(group, f"权限组 {name}")
+        require_string_list(group.get("flags"), FLAG, f"权限组 {name} 的权限")
+        if not valid_immunity(group.get("immunity")):
+            fail(f"权限组 {name} 的免疫等级无效")
+    if len(json.dumps(data["overrides"], ensure_ascii=False)) > 256 * 1024:
+        fail("命令权限覆盖配置超过限制")
+    return data
+
+
+def read_config():
+    result = {}
+    for key, filename in FILES.items():
+        with open(os.path.join(CONFIG_DIR, filename), encoding="utf-8") as handle:
+            result[key] = json.load(handle)
+    return validate(result)
+
+
+def atomic_write(filename, value):
+    target = os.path.join(CONFIG_DIR, filename)
+    owner = os.stat(target)
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{filename}.yacsrcon-", dir=CONFIG_DIR)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            json.dump(value, handle, indent=2, ensure_ascii=False)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chown(temporary, owner.st_uid, owner.st_gid)
+        os.chmod(temporary, 0o640)
+        os.replace(temporary, target)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def apply_config(data):
+    owner = os.stat(CONFIG_DIR)
+    timestamp = datetime.datetime.now(datetime.UTC).isoformat().replace(":", "-").replace(".", "-")
+    backup = os.path.join(BACKUP_DIR, timestamp)
+    os.makedirs(backup, mode=0o750)
+    for directory in (os.path.dirname(BACKUP_DIR), BACKUP_DIR, backup):
+        os.chown(directory, owner.st_uid, owner.st_gid)
+    for filename in FILES.values():
+        source = os.path.join(CONFIG_DIR, filename)
+        destination = os.path.join(backup, filename)
+        shutil.copy2(source, destination)
+        os.chown(destination, owner.st_uid, owner.st_gid)
+        os.chmod(destination, 0o640)
+    for key, filename in FILES.items():
+        atomic_write(filename, data[key])
+    return backup
+
+
+if len(sys.argv) != 2 or sys.argv[1] not in ("read", "apply"):
+    fail("用法：yacsrcon-admin-helper read|apply")
+
+if sys.argv[1] == "read":
+    print(json.dumps(read_config(), ensure_ascii=False))
+else:
+    raw = sys.stdin.buffer.read(1024 * 1024 + 1)
+    if len(raw) > 1024 * 1024:
+        fail("输入超过 1 MiB 限制")
+    try:
+        value = validate(json.loads(raw))
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        fail(str(error))
+    backup_directory = apply_config(value)
+    print(json.dumps({"backupDirectory": backup_directory}))

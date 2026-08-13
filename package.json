@@ -1,0 +1,32 @@
+{
+  "name": "yacsrcon",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 21590",
+    "build": "next build && node scripts/prepare-standalone.mjs",
+    "start": "next start --port 21590",
+    "sync:catalog": "node scripts/sync-server-catalog.mjs",
+    "lint": "eslint .",
+    "test": "node --test --experimental-strip-types tests/*.test.ts"
+  },
+  "dependencies": {
+    "@node-steam/vdf": "^2.2.0",
+    "@tailwindcss/postcss": "^4.1.11",
+    "lucide-react": "^0.468.0",
+    "next": "16.3.0",
+    "rcon-srcds": "^2.1.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.11",
+    "zod": "^4.0.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "eslint": "^9.30.0",
+    "eslint-config-next": "16.3.0",
+    "typescript": "^5.8.3"
+  }
+}

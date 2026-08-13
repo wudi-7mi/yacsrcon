@@ -1,0 +1,2668 @@
+{
+  "generatedAt": "2026-08-12T08:20:30.263Z",
+  "source": {
+    "gameModeManager": "GameModeManager.json",
+    "mapGroups": "gamemodes_server.txt"
+  },
+  "modes": [
+    {
+      "id": "casual-casual-cfg",
+      "name": "Casual",
+      "displayNameZh": "休闲模式",
+      "config": "casual.cfg",
+      "defaultMap": null,
+      "mapGroups": ["mg_active", "mg_comp"],
+      "maps": [
+        {
+          "name": "de_ancient",
+          "command": "changelevel de_ancient"
+        },
+        {
+          "name": "de_anubis",
+          "command": "changelevel de_anubis"
+        },
+        {
+          "name": "de_inferno",
+          "command": "changelevel de_inferno"
+        },
+        {
+          "name": "de_mirage",
+          "command": "changelevel de_mirage"
+        },
+        {
+          "name": "de_nuke",
+          "command": "changelevel de_nuke"
+        },
+        {
+          "name": "de_dust2",
+          "command": "changelevel de_dust2"
+        },
+        {
+          "name": "de_cache",
+          "command": "changelevel de_cache"
+        },
+        {
+          "name": "de_ancient_night",
+          "command": "changelevel de_ancient_night"
+        },
+        {
+          "name": "de_train",
+          "command": "changelevel de_train"
+        },
+        {
+          "name": "de_overpass",
+          "command": "changelevel de_overpass"
+        },
+        {
+          "name": "de_vertigo",
+          "command": "changelevel de_vertigo"
+        },
+        {
+          "name": "de_boulder",
+          "command": "changelevel de_boulder"
+        },
+        {
+          "name": "de_fachwerk",
+          "command": "changelevel de_fachwerk"
+        },
+        {
+          "name": "cs_shelter",
+          "command": "changelevel cs_shelter"
+        },
+        {
+          "name": "cs_office",
+          "command": "changelevel cs_office"
+        },
+        {
+          "name": "cs_italy",
+          "command": "changelevel cs_italy"
+        },
+        {
+          "name": "de_warden",
+          "workshopId": "3256988376",
+          "command": "host_workshop_map 3256988376"
+        },
+        {
+          "name": "de_stronghold",
+          "workshopId": "3477094554",
+          "command": "host_workshop_map 3477094554"
+        },
+        {
+          "name": "cs_alpine",
+          "workshopId": "3221491619",
+          "command": "host_workshop_map 3221491619"
+        },
+        {
+          "name": "de_golden",
+          "workshopId": "3286163323",
+          "command": "host_workshop_map 3286163323"
+        },
+        {
+          "name": "de_palacio",
+          "workshopId": "3249860053",
+          "command": "host_workshop_map 3249860053"
+        },
+        {
+          "name": "cs_agency",
+          "workshopId": "3339983232",
+          "command": "host_workshop_map 3339983232"
+        },
+        {
+          "name": "de_basalt",
+          "workshopId": "3329258290",
+          "command": "host_workshop_map 3329258290"
+        },
+        {
+          "name": "de_edin",
+          "workshopId": "3328169568",
+          "command": "host_workshop_map 3328169568"
+        },
+        {
+          "name": "de_assembly",
+          "workshopId": "3071005299",
+          "command": "host_workshop_map 3071005299"
+        },
+        {
+          "name": "de_cbble",
+          "workshopId": "3329387648",
+          "command": "host_workshop_map 3329387648"
+        },
+        {
+          "name": "de_splinter",
+          "workshopId": "3691046714",
+          "command": "host_workshop_map 3691046714"
+        },
+        {
+          "name": "de_biome",
+          "workshopId": "3075706807",
+          "command": "host_workshop_map 3075706807"
+        },
+        {
+          "name": "mp_raid",
+          "workshopId": "3070346180",
+          "command": "host_workshop_map 3070346180"
+        },
+        {
+          "name": "de_mutiny",
+          "workshopId": "3070766070",
+          "command": "host_workshop_map 3070766070"
+        },
+        {
+          "name": "cs_assault",
+          "workshopId": "3694043544",
+          "command": "host_workshop_map 3694043544"
+        },
+        {
+          "name": "de_ruins_d_prefab",
+          "workshopId": "3072352643",
+          "command": "host_workshop_map 3072352643"
+        },
+        {
+          "name": "cs_militia",
+          "workshopId": "3089953774",
+          "command": "host_workshop_map 3089953774"
+        },
+        {
+          "name": "de_aztec_hr",
+          "workshopId": "3079692971",
+          "command": "host_workshop_map 3079692971"
+        },
+        {
+          "name": "de_akiba",
+          "workshopId": "3108513658",
+          "command": "host_workshop_map 3108513658"
+        },
+        {
+          "name": "factory",
+          "workshopId": "3681322159",
+          "command": "host_workshop_map 3681322159"
+        },
+        {
+          "name": "cs_insertion2",
+          "workshopId": "3236615060",
+          "command": "host_workshop_map 3236615060"
+        },
+        {
+          "name": "de_mills",
+          "workshopId": "3152430710",
+          "command": "host_workshop_map 3152430710"
+        },
+        {
+          "name": "de_thera",
+          "workshopId": "3121217565",
+          "command": "host_workshop_map 3121217565"
+        },
+        {
+          "name": "de_season",
+          "workshopId": "3073892687",
+          "command": "host_workshop_map 3073892687"
+        },
+        {
+          "name": "de_ema",
+          "workshopId": "3386116667",
+          "command": "host_workshop_map 3386116667"
+        },
+        {
+          "name": "twofort_cs2",
+          "workshopId": "3345551391",
+          "command": "host_workshop_map 3345551391"
+        },
+        {
+          "name": "de_rats_remake",
+          "workshopId": "3460962520",
+          "command": "host_workshop_map 3460962520"
+        },
+        {
+          "name": "de_mirage_bricks",
+          "workshopId": "3464733042",
+          "command": "host_workshop_map 3464733042"
+        },
+        {
+          "name": "project_phoenix",
+          "workshopId": "3683699332",
+          "command": "host_workshop_map 3683699332"
+        },
+        {
+          "name": "ultimate_free_nuke",
+          "workshopId": "3687298714",
+          "command": "host_workshop_map 3687298714"
+        }
+      ]
+    },
+    {
+      "id": "gun-game-gg-cfg",
+      "name": "Gun Game",
+      "displayNameZh": "枪械升级",
+      "config": "gg.cfg",
+      "defaultMap": "ar_pool_day",
+      "mapGroups": ["mg_gg"],
+      "maps": [
+        {
+          "name": "ar_shoots",
+          "command": "changelevel ar_shoots"
+        },
+        {
+          "name": "ar_shoots_night",
+          "command": "changelevel ar_shoots_night"
+        },
+        {
+          "name": "ar_baggage",
+          "command": "changelevel ar_baggage"
+        },
+        {
+          "name": "ar_pool_day",
+          "command": "changelevel ar_pool_day"
+        },
+        {
+          "name": "speedball",
+          "workshopId": "3443206318",
+          "command": "host_workshop_map 3443206318"
+        },
+        {
+          "name": "aim_plywood",
+          "workshopId": "3118710028",
+          "command": "host_workshop_map 3118710028"
+        },
+        {
+          "name": "gg_lego_arena",
+          "workshopId": "3267768230",
+          "command": "host_workshop_map 3267768230"
+        },
+        {
+          "name": "de_indoor",
+          "workshopId": "3535917558",
+          "command": "host_workshop_map 3535917558"
+        },
+        {
+          "name": "de_assembly",
+          "workshopId": "3071005299",
+          "command": "host_workshop_map 3071005299"
+        },
+        {
+          "name": "fy_iceworld",
+          "workshopId": "3070238628",
+          "command": "host_workshop_map 3070238628"
+        },
+        {
+          "name": "daymare",
+          "workshopId": "3072640420",
+          "command": "host_workshop_map 3072640420"
+        },
+        {
+          "name": "mcdonalds",
+          "workshopId": "3134466699",
+          "command": "host_workshop_map 3134466699"
+        },
+        {
+          "name": "aim_theorem",
+          "workshopId": "3070348309",
+          "command": "host_workshop_map 3070348309"
+        },
+        {
+          "name": "de_safehouse",
+          "workshopId": "3070550406",
+          "command": "host_workshop_map 3070550406"
+        },
+        {
+          "name": "de_lake",
+          "workshopId": "3070563536",
+          "command": "host_workshop_map 3070563536"
+        },
+        {
+          "name": "de_bank",
+          "workshopId": "3070581293",
+          "command": "host_workshop_map 3070581293"
+        },
+        {
+          "name": "fun_bounce",
+          "workshopId": "3088183343",
+          "command": "host_workshop_map 3088183343"
+        },
+        {
+          "name": "1v1aim_map_longdustversion_d",
+          "workshopId": "3082605693",
+          "command": "host_workshop_map 3082605693"
+        },
+        {
+          "name": "ar_churches_s2r",
+          "workshopId": "3070291913",
+          "command": "host_workshop_map 3070291913"
+        },
+        {
+          "name": "aim_ag_texture_city_advanced",
+          "workshopId": "3082113929",
+          "command": "host_workshop_map 3082113929"
+        },
+        {
+          "name": "trainingoutside",
+          "workshopId": "3475270536",
+          "command": "host_workshop_map 3475270536"
+        },
+        {
+          "name": "shipment_version_1_0",
+          "workshopId": "3086555291",
+          "command": "host_workshop_map 3086555291"
+        },
+        {
+          "name": "aim_ag_texture2",
+          "workshopId": "3074961197",
+          "command": "host_workshop_map 3074961197"
+        },
+        {
+          "name": "aim_ag_texture_jungle",
+          "workshopId": "3095778105",
+          "command": "host_workshop_map 3095778105"
+        },
+        {
+          "name": "cs2_bloodstrike",
+          "workshopId": "3071890065",
+          "command": "host_workshop_map 3071890065"
+        },
+        {
+          "name": "gg_simpsons_vs_flanders_v2",
+          "workshopId": "3109232789",
+          "command": "host_workshop_map 3109232789"
+        },
+        {
+          "name": "school_d_environment_prefab",
+          "workshopId": "3343693110",
+          "command": "host_workshop_map 3343693110"
+        },
+        {
+          "name": "de_ema",
+          "workshopId": "3386116667",
+          "command": "host_workshop_map 3386116667"
+        },
+        {
+          "name": "twofort_cs2",
+          "workshopId": "3345551391",
+          "command": "host_workshop_map 3345551391"
+        },
+        {
+          "name": "paintit",
+          "workshopId": "3360723913",
+          "command": "host_workshop_map 3360723913"
+        },
+        {
+          "name": "kloce",
+          "workshopId": "3248340515",
+          "command": "host_workshop_map 3248340515"
+        },
+        {
+          "name": "gulag",
+          "workshopId": "3326465469",
+          "command": "host_workshop_map 3326465469"
+        },
+        {
+          "name": "de_rats_remake",
+          "workshopId": "3460962520",
+          "command": "host_workshop_map 3460962520"
+        },
+        {
+          "name": "de_mirage_bricks",
+          "workshopId": "3464733042",
+          "command": "host_workshop_map 3464733042"
+        },
+        {
+          "name": "de_splat",
+          "workshopId": "3439120481",
+          "command": "host_workshop_map 3439120481"
+        },
+        {
+          "name": "1v1v1v1beta04",
+          "workshopId": "3433012420",
+          "command": "host_workshop_map 3433012420"
+        },
+        {
+          "name": "gg_festspeedball",
+          "workshopId": "3111527644",
+          "command": "host_workshop_map 3111527644"
+        },
+        {
+          "name": "ar_blue_arena",
+          "workshopId": "3361478861",
+          "command": "host_workshop_map 3361478861"
+        },
+        {
+          "name": "gg_strafe_gg1",
+          "workshopId": "3331570055",
+          "command": "host_workshop_map 3331570055"
+        },
+        {
+          "name": "aim_shotty2_gg1",
+          "workshopId": "3360120483",
+          "command": "host_workshop_map 3360120483"
+        },
+        {
+          "name": "fy_hangemhigh",
+          "workshopId": "3437226954",
+          "command": "host_workshop_map 3437226954"
+        },
+        {
+          "name": "ar_combat_arena",
+          "workshopId": "3455068243",
+          "command": "host_workshop_map 3455068243"
+        },
+        {
+          "name": "ar_ds_cornered_gg1",
+          "workshopId": "3329405459",
+          "command": "host_workshop_map 3329405459"
+        },
+        {
+          "name": "awp_lego_2_destructible",
+          "workshopId": "3706720942",
+          "command": "host_workshop_map 3706720942"
+        }
+      ]
+    },
+    {
+      "id": "deathmatch-deathmatch-cfg",
+      "name": "Deathmatch",
+      "displayNameZh": "死亡竞赛",
+      "config": "deathmatch.cfg",
+      "defaultMap": "de_dust2",
+      "mapGroups": ["mg_dm"],
+      "maps": [
+        {
+          "name": "de_vertigo",
+          "command": "changelevel de_vertigo"
+        },
+        {
+          "name": "de_dust2",
+          "command": "changelevel de_dust2"
+        },
+        {
+          "name": "de_inferno",
+          "command": "changelevel de_inferno"
+        },
+        {
+          "name": "de_mirage",
+          "command": "changelevel de_mirage"
+        }
+      ]
+    },
+    {
+      "id": "competitive-comp-cfg",
+      "name": "Competitive",
+      "displayNameZh": "竞技模式",
+      "config": "comp.cfg",
+      "defaultMap": "de_inferno",
+      "mapGroups": ["mg_comp"],
+      "maps": [
+        {
+          "name": "de_dust2",
+          "command": "changelevel de_dust2"
+        },
+        {
+          "name": "de_cache",
+          "command": "changelevel de_cache"
+        },
+        {
+          "name": "de_mirage",
+          "command": "changelevel de_mirage"
+        },
+        {
+          "name": "de_inferno",
+          "command": "changelevel de_inferno"
+        },
+        {
+          "name": "de_ancient_night",
+          "command": "changelevel de_ancient_night"
+        },
+        {
+          "name": "de_nuke",
+          "command": "changelevel de_nuke"
+        },
+        {
+          "name": "de_train",
+          "command": "changelevel de_train"
+        },
+        {
+          "name": "de_overpass",
+          "command": "changelevel de_overpass"
+        },
+        {
+          "name": "de_anubis",
+          "command": "changelevel de_anubis"
+        },
+        {
+          "name": "de_vertigo",
+          "command": "changelevel de_vertigo"
+        },
+        {
+          "name": "de_boulder",
+          "command": "changelevel de_boulder"
+        },
+        {
+          "name": "de_fachwerk",
+          "command": "changelevel de_fachwerk"
+        },
+        {
+          "name": "cs_shelter",
+          "command": "changelevel cs_shelter"
+        },
+        {
+          "name": "cs_office",
+          "command": "changelevel cs_office"
+        },
+        {
+          "name": "cs_italy",
+          "command": "changelevel cs_italy"
+        },
+        {
+          "name": "de_warden",
+          "workshopId": "3256988376",
+          "command": "host_workshop_map 3256988376"
+        },
+        {
+          "name": "de_stronghold",
+          "workshopId": "3477094554",
+          "command": "host_workshop_map 3477094554"
+        },
+        {
+          "name": "cs_alpine",
+          "workshopId": "3221491619",
+          "command": "host_workshop_map 3221491619"
+        },
+        {
+          "name": "de_golden",
+          "workshopId": "3286163323",
+          "command": "host_workshop_map 3286163323"
+        },
+        {
+          "name": "de_palacio",
+          "workshopId": "3249860053",
+          "command": "host_workshop_map 3249860053"
+        },
+        {
+          "name": "cs_agency",
+          "workshopId": "3339983232",
+          "command": "host_workshop_map 3339983232"
+        },
+        {
+          "name": "de_basalt",
+          "workshopId": "3329258290",
+          "command": "host_workshop_map 3329258290"
+        },
+        {
+          "name": "de_edin",
+          "workshopId": "3328169568",
+          "command": "host_workshop_map 3328169568"
+        },
+        {
+          "name": "de_assembly",
+          "workshopId": "3071005299",
+          "command": "host_workshop_map 3071005299"
+        },
+        {
+          "name": "de_cbble",
+          "workshopId": "3329387648",
+          "command": "host_workshop_map 3329387648"
+        },
+        {
+          "name": "de_splinter",
+          "workshopId": "3691046714",
+          "command": "host_workshop_map 3691046714"
+        },
+        {
+          "name": "de_biome",
+          "workshopId": "3075706807",
+          "command": "host_workshop_map 3075706807"
+        },
+        {
+          "name": "mp_raid",
+          "workshopId": "3070346180",
+          "command": "host_workshop_map 3070346180"
+        },
+        {
+          "name": "de_mutiny",
+          "workshopId": "3070766070",
+          "command": "host_workshop_map 3070766070"
+        },
+        {
+          "name": "cs_assault",
+          "workshopId": "3694043544",
+          "command": "host_workshop_map 3694043544"
+        },
+        {
+          "name": "de_ruins_d_prefab",
+          "workshopId": "3072352643",
+          "command": "host_workshop_map 3072352643"
+        },
+        {
+          "name": "cs_militia",
+          "workshopId": "3089953774",
+          "command": "host_workshop_map 3089953774"
+        },
+        {
+          "name": "de_aztec_hr",
+          "workshopId": "3079692971",
+          "command": "host_workshop_map 3079692971"
+        },
+        {
+          "name": "de_akiba",
+          "workshopId": "3108513658",
+          "command": "host_workshop_map 3108513658"
+        },
+        {
+          "name": "factory",
+          "workshopId": "3681322159",
+          "command": "host_workshop_map 3681322159"
+        },
+        {
+          "name": "cs_insertion2",
+          "workshopId": "3236615060",
+          "command": "host_workshop_map 3236615060"
+        },
+        {
+          "name": "de_mills",
+          "workshopId": "3152430710",
+          "command": "host_workshop_map 3152430710"
+        },
+        {
+          "name": "de_thera",
+          "workshopId": "3121217565",
+          "command": "host_workshop_map 3121217565"
+        },
+        {
+          "name": "de_season",
+          "workshopId": "3073892687",
+          "command": "host_workshop_map 3073892687"
+        },
+        {
+          "name": "de_ema",
+          "workshopId": "3386116667",
+          "command": "host_workshop_map 3386116667"
+        },
+        {
+          "name": "twofort_cs2",
+          "workshopId": "3345551391",
+          "command": "host_workshop_map 3345551391"
+        },
+        {
+          "name": "de_rats_remake",
+          "workshopId": "3460962520",
+          "command": "host_workshop_map 3460962520"
+        },
+        {
+          "name": "de_mirage_bricks",
+          "workshopId": "3464733042",
+          "command": "host_workshop_map 3464733042"
+        },
+        {
+          "name": "project_phoenix",
+          "workshopId": "3683699332",
+          "command": "host_workshop_map 3683699332"
+        },
+        {
+          "name": "ultimate_free_nuke",
+          "workshopId": "3687298714",
+          "command": "host_workshop_map 3687298714"
+        }
+      ]
+    },
+    {
+      "id": "wingman-wingman-cfg",
+      "name": "Wingman",
+      "displayNameZh": "搭档模式",
+      "config": "wingman.cfg",
+      "defaultMap": "de_nuke",
+      "mapGroups": ["mg_wingman"],
+      "maps": [
+        {
+          "name": "de_cache",
+          "command": "changelevel de_cache"
+        },
+        {
+          "name": "de_poseidon",
+          "command": "changelevel de_poseidon"
+        },
+        {
+          "name": "de_overpass",
+          "command": "changelevel de_overpass"
+        },
+        {
+          "name": "de_vertigo",
+          "command": "changelevel de_vertigo"
+        },
+        {
+          "name": "de_nuke",
+          "command": "changelevel de_nuke"
+        },
+        {
+          "name": "de_inferno",
+          "command": "changelevel de_inferno"
+        },
+        {
+          "name": "ar_pool_day",
+          "command": "changelevel ar_pool_day"
+        },
+        {
+          "name": "de_debris",
+          "command": "changelevel de_debris"
+        },
+        {
+          "name": "de_eldorado",
+          "command": "changelevel de_eldorado"
+        },
+        {
+          "name": "de_sanctum",
+          "workshopId": "3643331442",
+          "command": "host_workshop_map 3643331442"
+        },
+        {
+          "name": "de_rooftop",
+          "workshopId": "3536622725",
+          "command": "host_workshop_map 3536622725"
+        },
+        {
+          "name": "de_splat",
+          "workshopId": "3439120481",
+          "command": "host_workshop_map 3439120481"
+        },
+        {
+          "name": "de_dust2_wingman",
+          "workshopId": "3413800427",
+          "command": "host_workshop_map 3413800427"
+        },
+        {
+          "name": "de_mirage_d",
+          "workshopId": "3402437047",
+          "command": "host_workshop_map 3402437047"
+        },
+        {
+          "name": "de_palais",
+          "workshopId": "3257582863",
+          "command": "host_workshop_map 3257582863"
+        },
+        {
+          "name": "de_whistle",
+          "workshopId": "3308613773",
+          "command": "host_workshop_map 3308613773"
+        },
+        {
+          "name": "gd_rialto",
+          "workshopId": "3085490518",
+          "command": "host_workshop_map 3085490518"
+        },
+        {
+          "name": "de_safehouse",
+          "workshopId": "3070550406",
+          "command": "host_workshop_map 3070550406"
+        },
+        {
+          "name": "de_lake",
+          "workshopId": "3070563536",
+          "command": "host_workshop_map 3070563536"
+        },
+        {
+          "name": "de_bank",
+          "workshopId": "3070581293",
+          "command": "host_workshop_map 3070581293"
+        },
+        {
+          "name": "de_shortdust",
+          "workshopId": "3070612859",
+          "command": "host_workshop_map 3070612859"
+        },
+        {
+          "name": "de_assembly",
+          "workshopId": "3071005299",
+          "command": "host_workshop_map 3071005299"
+        },
+        {
+          "name": "de_cbble",
+          "workshopId": "3329387648",
+          "command": "host_workshop_map 3329387648"
+        },
+        {
+          "name": "de_biome",
+          "workshopId": "3075706807",
+          "command": "host_workshop_map 3075706807"
+        },
+        {
+          "name": "mp_raid",
+          "workshopId": "3070346180",
+          "command": "host_workshop_map 3070346180"
+        },
+        {
+          "name": "de_mutiny",
+          "workshopId": "3070766070",
+          "command": "host_workshop_map 3070766070"
+        },
+        {
+          "name": "cs_assault",
+          "workshopId": "3070594412",
+          "command": "host_workshop_map 3070594412"
+        },
+        {
+          "name": "de_ruins_d_prefab",
+          "workshopId": "3072352643",
+          "command": "host_workshop_map 3072352643"
+        },
+        {
+          "name": "de_sakura",
+          "workshopId": "3082340867",
+          "command": "host_workshop_map 3082340867"
+        },
+        {
+          "name": "de_memento",
+          "workshopId": "3165559377",
+          "command": "host_workshop_map 3165559377"
+        },
+        {
+          "name": "skatepark",
+          "workshopId": "3309665004",
+          "command": "host_workshop_map 3309665004"
+        },
+        {
+          "name": "de_ema",
+          "workshopId": "3386116667",
+          "command": "host_workshop_map 3386116667"
+        },
+        {
+          "name": "paintit",
+          "workshopId": "3360723913",
+          "command": "host_workshop_map 3360723913"
+        },
+        {
+          "name": "de_mirage_bricks",
+          "workshopId": "3464733042",
+          "command": "host_workshop_map 3464733042"
+        }
+      ]
+    },
+    {
+      "id": "practice-mode-prac-cfg",
+      "name": "Practice Mode",
+      "displayNameZh": "练习模式",
+      "config": "prac.cfg",
+      "defaultMap": "de_dust2",
+      "mapGroups": ["mg_comp"],
+      "maps": [
+        {
+          "name": "de_dust2",
+          "command": "changelevel de_dust2"
+        },
+        {
+          "name": "de_cache",
+          "command": "changelevel de_cache"
+        },
+        {
+          "name": "de_mirage",
+          "command": "changelevel de_mirage"
+        },
+        {
+          "name": "de_inferno",
+          "command": "changelevel de_inferno"
+        },
+        {
+          "name": "de_ancient_night",
+          "command": "changelevel de_ancient_night"
+        },
+        {
+          "name": "de_nuke",
+          "command": "changelevel de_nuke"
+        },
+        {
+          "name": "de_train",
+          "command": "changelevel de_train"
+        },
+        {
+          "name": "de_overpass",
+          "command": "changelevel de_overpass"
+        },
+        {
+          "name": "de_anubis",
+          "command": "changelevel de_anubis"
+        },
+        {
+          "name": "de_vertigo",
+          "command": "changelevel de_vertigo"
+        },
+        {
+          "name": "de_boulder",
+          "command": "changelevel de_boulder"
+        },
+        {
+          "name": "de_fachwerk",
+          "command": "changelevel de_fachwerk"
+        },
+        {
+          "name": "cs_shelter",
+          "command": "changelevel cs_shelter"
+        },
+        {
+          "name": "cs_office",
+          "command": "changelevel cs_office"
+        },
+        {
+          "name": "cs_italy",
+          "command": "changelevel cs_italy"
+        },
+        {
+          "name": "de_warden",
+          "workshopId": "3256988376",
+          "command": "host_workshop_map 3256988376"
+        },
+        {
+          "name": "de_stronghold",
+          "workshopId": "3477094554",
+          "command": "host_workshop_map 3477094554"
+        },
+        {
+          "name": "cs_alpine",
+          "workshopId": "3221491619",
+          "command": "host_workshop_map 3221491619"
+        },
+        {
+          "name": "de_golden",
+          "workshopId": "3286163323",
+          "command": "host_workshop_map 3286163323"
+        },
+        {
+          "name": "de_palacio",
+          "workshopId": "3249860053",
+          "command": "host_workshop_map 3249860053"
+        },
+        {
+          "name": "cs_agency",
+          "workshopId": "3339983232",
+          "command": "host_workshop_map 3339983232"
+        },
+        {
+          "name": "de_basalt",
+          "workshopId": "3329258290",
+          "command": "host_workshop_map 3329258290"
+        },
+        {
+          "name": "de_edin",
+          "workshopId": "3328169568",
+          "command": "host_workshop_map 3328169568"
+        },
+        {
+          "name": "de_assembly",
+          "workshopId": "3071005299",
+          "command": "host_workshop_map 3071005299"
+        },
+        {
+          "name": "de_cbble",
+          "workshopId": "3329387648",
+          "command": "host_workshop_map 3329387648"
+        },
+        {
+          "name": "de_splinter",
+          "workshopId": "3691046714",
+          "command": "host_workshop_map 3691046714"
+        },
+        {
+          "name": "de_biome",
+          "workshopId": "3075706807",
+          "command": "host_workshop_map 3075706807"
+        },
+        {
+          "name": "mp_raid",
+          "workshopId": "3070346180",
+          "command": "host_workshop_map 3070346180"
+        },
+        {
+          "name": "de_mutiny",
+          "workshopId": "3070766070",
+          "command": "host_workshop_map 3070766070"
+        },
+        {
+          "name": "cs_assault",
+          "workshopId": "3694043544",
+          "command": "host_workshop_map 3694043544"
+        },
+        {
+          "name": "de_ruins_d_prefab",
+          "workshopId": "3072352643",
+          "command": "host_workshop_map 3072352643"
+        },
+        {
+          "name": "cs_militia",
+          "workshopId": "3089953774",
+          "command": "host_workshop_map 3089953774"
+        },
+        {
+          "name": "de_aztec_hr",
+          "workshopId": "3079692971",
+          "command": "host_workshop_map 3079692971"
+        },
+        {
+          "name": "de_akiba",
+          "workshopId": "3108513658",
+          "command": "host_workshop_map 3108513658"
+        },
+        {
+          "name": "factory",
+          "workshopId": "3681322159",
+          "command": "host_workshop_map 3681322159"
+        },
+        {
+          "name": "cs_insertion2",
+          "workshopId": "3236615060",
+          "command": "host_workshop_map 3236615060"
+        },
+        {
+          "name": "de_mills",
+          "workshopId": "3152430710",
+          "command": "host_workshop_map 3152430710"
+        },
+        {
+          "name": "de_thera",
+          "workshopId": "3121217565",
+          "command": "host_workshop_map 3121217565"
+        },
+        {
+          "name": "de_season",
+          "workshopId": "3073892687",
+          "command": "host_workshop_map 3073892687"
+        },
+        {
+          "name": "de_ema",
+          "workshopId": "3386116667",
+          "command": "host_workshop_map 3386116667"
+        },
+        {
+          "name": "twofort_cs2",
+          "workshopId": "3345551391",
+          "command": "host_workshop_map 3345551391"
+        },
+        {
+          "name": "de_rats_remake",
+          "workshopId": "3460962520",
+          "command": "host_workshop_map 3460962520"
+        },
+        {
+          "name": "de_mirage_bricks",
+          "workshopId": "3464733042",
+          "command": "host_workshop_map 3464733042"
+        },
+        {
+          "name": "project_phoenix",
+          "workshopId": "3683699332",
+          "command": "host_workshop_map 3683699332"
+        },
+        {
+          "name": "ultimate_free_nuke",
+          "workshopId": "3687298714",
+          "command": "host_workshop_map 3687298714"
+        }
+      ]
+    },
+    {
+      "id": "prefire-prefire-cfg",
+      "name": "Prefire",
+      "displayNameZh": "预瞄练习",
+      "config": "prefire.cfg",
+      "defaultMap": "de_inferno",
+      "mapGroups": ["mg_prefire"],
+      "maps": [
+        {
+          "name": "de_ancient",
+          "command": "changelevel de_ancient"
+        },
+        {
+          "name": "de_anubis",
+          "command": "changelevel de_anubis"
+        },
+        {
+          "name": "de_inferno",
+          "command": "changelevel de_inferno"
+        },
+        {
+          "name": "de_mirage",
+          "command": "changelevel de_mirage"
+        },
+        {
+          "name": "de_nuke",
+          "command": "changelevel de_nuke"
+        },
+        {
+          "name": "de_dust2",
+          "command": "changelevel de_dust2"
+        },
+        {
+          "name": "de_train",
+          "command": "changelevel de_train"
+        },
+        {
+          "name": "de_overpass",
+          "command": "changelevel de_overpass"
+        },
+        {
+          "name": "de_vertigo",
+          "command": "changelevel de_vertigo"
+        }
+      ]
+    },
+    {
+      "id": "retakes-retake-cfg",
+      "name": "Retakes",
+      "displayNameZh": "回防模式",
+      "config": "retake.cfg",
+      "defaultMap": "de_dust2",
+      "mapGroups": ["mg_retake"],
+      "maps": [
+        {
+          "name": "de_ancient",
+          "command": "changelevel de_ancient"
+        },
+        {
+          "name": "de_anubis",
+          "command": "changelevel de_anubis"
+        },
+        {
+          "name": "de_inferno",
+          "command": "changelevel de_inferno"
+        },
+        {
+          "name": "de_mirage",
+          "command": "changelevel de_mirage"
+        },
+        {
+          "name": "de_nuke",
+          "command": "changelevel de_nuke"
+        },
+        {
+          "name": "de_dust2",
+          "command": "changelevel de_dust2"
+        },
+        {
+          "name": "de_train",
+          "command": "changelevel de_train"
+        },
+        {
+          "name": "de_overpass",
+          "command": "changelevel de_overpass"
+        },
+        {
+          "name": "de_vertigo",
+          "command": "changelevel de_vertigo"
+        }
+      ]
+    },
+    {
+      "id": "executes-executes-cfg",
+      "name": "Executes",
+      "displayNameZh": "战术执行",
+      "config": "executes.cfg",
+      "defaultMap": "de_mirage",
+      "mapGroups": ["mg_executes"],
+      "maps": [
+        {
+          "name": "de_mirage",
+          "command": "changelevel de_mirage"
+        }
+      ]
+    },
+    {
+      "id": "awp-only-awp-cfg",
+      "name": "Awp Only",
+      "displayNameZh": "仅限 AWP",
+      "config": "awp.cfg",
+      "defaultMap": "3142070597",
+      "mapGroups": ["mg_awp"],
+      "maps": [
+        {
+          "name": "awp_bhop_rocket",
+          "workshopId": "3142070597",
+          "command": "host_workshop_map 3142070597"
+        },
+        {
+          "name": "bump_arena",
+          "workshopId": "3679420050",
+          "command": "host_workshop_map 3679420050"
+        }
+      ]
+    },
+    {
+      "id": "1v1-arenas-1v1-cfg",
+      "name": "1v1 Arenas",
+      "displayNameZh": "1v1 竞技场",
+      "config": "1v1.cfg",
+      "defaultMap": "3070253400",
+      "mapGroups": ["mg_1v1"],
+      "maps": [
+        {
+          "name": "aim_redline_fp",
+          "workshopId": "3070253400",
+          "command": "host_workshop_map 3070253400"
+        }
+      ]
+    },
+    {
+      "id": "aim-aim-cfg",
+      "name": "Aim",
+      "displayNameZh": "瞄准练习",
+      "config": "aim.cfg",
+      "defaultMap": "3084291314",
+      "mapGroups": ["mg_aim"],
+      "maps": [
+        {
+          "name": "aim_map",
+          "workshopId": "3084291314",
+          "command": "host_workshop_map 3084291314"
+        },
+        {
+          "name": "gg_festspeedball",
+          "workshopId": "3111527644",
+          "command": "host_workshop_map 3111527644"
+        },
+        {
+          "name": "aim_plywood",
+          "workshopId": "3118710028",
+          "command": "host_workshop_map 3118710028"
+        },
+        {
+          "name": "freebet_aim_map",
+          "workshopId": "3146122036",
+          "command": "host_workshop_map 3146122036"
+        },
+        {
+          "name": "ar_pool_day",
+          "command": "changelevel ar_pool_day"
+        },
+        {
+          "name": "aim_ak-colt_CS2",
+          "workshopId": "3078701726",
+          "command": "host_workshop_map 3078701726"
+        },
+        {
+          "name": "aim_usp",
+          "workshopId": "3085962528",
+          "command": "host_workshop_map 3085962528"
+        },
+        {
+          "name": "aim_deagle",
+          "workshopId": "3075996446",
+          "command": "host_workshop_map 3075996446"
+        },
+        {
+          "name": "1v1aim_map_longdustversion_d",
+          "workshopId": "3082605693",
+          "command": "host_workshop_map 3082605693"
+        },
+        {
+          "name": "de_splat",
+          "workshopId": "3439120481",
+          "command": "host_workshop_map 3439120481"
+        },
+        {
+          "name": "1v1v1v1beta04",
+          "workshopId": "3433012420",
+          "command": "host_workshop_map 3433012420"
+        },
+        {
+          "name": "ar_blue_arena",
+          "workshopId": "3361478861",
+          "command": "host_workshop_map 3361478861"
+        },
+        {
+          "name": "gg_strafe_gg1",
+          "workshopId": "3331570055",
+          "command": "host_workshop_map 3331570055"
+        },
+        {
+          "name": "aim_shotty2_gg1",
+          "workshopId": "3360120483",
+          "command": "host_workshop_map 3360120483"
+        },
+        {
+          "name": "fy_hangemhigh",
+          "workshopId": "3437226954",
+          "command": "host_workshop_map 3437226954"
+        },
+        {
+          "name": "ar_combat_arena",
+          "workshopId": "3455068243",
+          "command": "host_workshop_map 3455068243"
+        },
+        {
+          "name": "ar_ds_cornered_gg1",
+          "workshopId": "3329405459",
+          "command": "host_workshop_map 3329405459"
+        },
+        {
+          "name": "speedball",
+          "workshopId": "3443206318",
+          "command": "host_workshop_map 3443206318"
+        },
+        {
+          "name": "de_indoor",
+          "workshopId": "3535917558",
+          "command": "host_workshop_map 3535917558"
+        },
+        {
+          "name": "daymare",
+          "workshopId": "3072640420",
+          "command": "host_workshop_map 3072640420"
+        },
+        {
+          "name": "aim_ag_texture_city_advanced",
+          "workshopId": "3082113929",
+          "command": "host_workshop_map 3082113929"
+        },
+        {
+          "name": "trainingoutside",
+          "workshopId": "3475270536",
+          "command": "host_workshop_map 3475270536"
+        },
+        {
+          "name": "shipment_version_1_0",
+          "workshopId": "3086555291",
+          "command": "host_workshop_map 3086555291"
+        },
+        {
+          "name": "aim_ag_texture2",
+          "workshopId": "3074961197",
+          "command": "host_workshop_map 3074961197"
+        },
+        {
+          "name": "aim_ag_texture_jungle",
+          "workshopId": "3095778105",
+          "command": "host_workshop_map 3095778105"
+        },
+        {
+          "name": "cs2_bloodstrike",
+          "workshopId": "3071890065",
+          "command": "host_workshop_map 3071890065"
+        }
+      ]
+    },
+    {
+      "id": "bhop-bhop-cfg",
+      "name": "Bhop",
+      "displayNameZh": "连跳",
+      "config": "bhop.cfg",
+      "defaultMap": "3088973190",
+      "mapGroups": ["mg_bhop"],
+      "maps": [
+        {
+          "name": "bhop_at_night",
+          "workshopId": "3077211069",
+          "command": "host_workshop_map 3077211069"
+        },
+        {
+          "name": "bhop_ragnarok",
+          "workshopId": "3077153735",
+          "command": "host_workshop_map 3077153735"
+        },
+        {
+          "name": "bhop_zunron",
+          "workshopId": "3077475505",
+          "command": "host_workshop_map 3077475505"
+        },
+        {
+          "name": "bhop_1derland",
+          "workshopId": "3077596014",
+          "command": "host_workshop_map 3077596014"
+        },
+        {
+          "name": "bhop_whiteshit",
+          "workshopId": "3078523849",
+          "command": "host_workshop_map 3078523849"
+        },
+        {
+          "name": "bhop_cherryblossom",
+          "workshopId": "3082038560",
+          "command": "host_workshop_map 3082038560"
+        },
+        {
+          "name": "bhop_arcturus",
+          "workshopId": "3088973190",
+          "command": "host_workshop_map 3088973190"
+        },
+        {
+          "name": "bhop_kiwi_cwfx",
+          "workshopId": "3095219437",
+          "command": "host_workshop_map 3095219437"
+        }
+      ]
+    },
+    {
+      "id": "surf-surf-cfg",
+      "name": "Surf",
+      "displayNameZh": "滑翔",
+      "config": "surf.cfg",
+      "defaultMap": "3082548297",
+      "mapGroups": ["mg_surf"],
+      "maps": [
+        {
+          "name": "surf_kitsune",
+          "workshopId": "3076153623",
+          "command": "host_workshop_map 3076153623"
+        },
+        {
+          "name": "surf_utopia_njv",
+          "workshopId": "3073875025",
+          "command": "host_workshop_map 3073875025"
+        },
+        {
+          "name": "surf_beginner",
+          "workshopId": "3070321829",
+          "command": "host_workshop_map 3070321829"
+        },
+        {
+          "name": "surf_mesa_revo",
+          "workshopId": "3076980482",
+          "command": "host_workshop_map 3076980482"
+        },
+        {
+          "name": "surf_deathstar",
+          "workshopId": "3080544577",
+          "command": "host_workshop_map 3080544577"
+        },
+        {
+          "name": "surf_rookie",
+          "workshopId": "3082548297",
+          "command": "host_workshop_map 3082548297"
+        },
+        {
+          "name": "surf_benevolent",
+          "workshopId": "3098972556",
+          "command": "host_workshop_map 3098972556"
+        },
+        {
+          "name": "surf_ace",
+          "workshopId": "3088413071",
+          "command": "host_workshop_map 3088413071"
+        },
+        {
+          "name": "surf_boreas",
+          "workshopId": "3133346713",
+          "command": "host_workshop_map 3133346713"
+        },
+        {
+          "name": "surf_nyx",
+          "workshopId": "3129698096",
+          "command": "host_workshop_map 3129698096"
+        },
+        {
+          "name": "surf_whiteout",
+          "workshopId": "3296258256",
+          "command": "host_workshop_map 3296258256"
+        },
+        {
+          "name": "surf_ski_2",
+          "workshopId": "3079877518",
+          "command": "host_workshop_map 3079877518"
+        }
+      ]
+    },
+    {
+      "id": "kreedz-climbing-kz-cfg",
+      "name": "Kreedz Climbing",
+      "displayNameZh": "KZ 攀爬",
+      "config": "kz.cfg",
+      "defaultMap": "3086304337",
+      "mapGroups": ["mg_kz"],
+      "maps": [
+        {
+          "name": "only_up",
+          "workshopId": "3074758439",
+          "command": "host_workshop_map 3074758439"
+        },
+        {
+          "name": "kz_dima",
+          "workshopId": "3343029934",
+          "command": "host_workshop_map 3343029934"
+        },
+        {
+          "name": "ewii_challenge",
+          "workshopId": "3170668869",
+          "command": "host_workshop_map 3170668869"
+        },
+        {
+          "name": "hellcasecyrilchallenge",
+          "workshopId": "3145779590",
+          "command": "host_workshop_map 3145779590"
+        },
+        {
+          "name": "kz_checkmate",
+          "workshopId": "3070194623",
+          "command": "host_workshop_map 3070194623"
+        },
+        {
+          "name": "kz_victoria",
+          "workshopId": "3086304337",
+          "command": "host_workshop_map 3086304337"
+        },
+        {
+          "name": "kz_rc_stonehenge",
+          "workshopId": "3072219045",
+          "command": "host_workshop_map 3072219045"
+        },
+        {
+          "name": "kz_sxb2_cxz",
+          "workshopId": "3083714192",
+          "command": "host_workshop_map 3083714192"
+        },
+        {
+          "name": "kz_rc_twotowers",
+          "workshopId": "3083509404",
+          "command": "host_workshop_map 3083509404"
+        },
+        {
+          "name": "kz_simplyhard",
+          "workshopId": "3078311932",
+          "command": "host_workshop_map 3078311932"
+        },
+        {
+          "name": "kz_nomibo",
+          "workshopId": "3077122656",
+          "command": "host_workshop_map 3077122656"
+        },
+        {
+          "name": "kz_sxb2_biewan",
+          "workshopId": "3076000218",
+          "command": "host_workshop_map 3076000218"
+        },
+        {
+          "name": "kz_ggsh",
+          "workshopId": "3072744536",
+          "command": "host_workshop_map 3072744536"
+        },
+        {
+          "name": "kz_ltt",
+          "workshopId": "3072699538",
+          "command": "host_workshop_map 3072699538"
+        }
+      ]
+    },
+    {
+      "id": "capture-the-flag-ctf-cfg",
+      "name": "Capture The Flag",
+      "displayNameZh": "夺旗模式",
+      "config": "ctf.cfg",
+      "defaultMap": "3555531615",
+      "mapGroups": ["mg_ctf"],
+      "maps": [
+        {
+          "name": "ctf_2fort",
+          "workshopId": "3555531615",
+          "command": "host_workshop_map 3555531615"
+        },
+        {
+          "name": "ctf_doublecross",
+          "workshopId": "3555532817",
+          "command": "host_workshop_map 3555532817"
+        },
+        {
+          "name": "ctf_turbine",
+          "workshopId": "3555534037",
+          "command": "host_workshop_map 3555534037"
+        },
+        {
+          "name": "ctf_sawmill",
+          "workshopId": "3611854449",
+          "command": "host_workshop_map 3611854449"
+        },
+        {
+          "name": "ctf_applejack",
+          "workshopId": "3611844411",
+          "command": "host_workshop_map 3611844411"
+        },
+        {
+          "name": "ctf_landfall",
+          "workshopId": "3611843310",
+          "command": "host_workshop_map 3611843310"
+        }
+      ]
+    },
+    {
+      "id": "hide-n-seek-hns-cfg",
+      "name": "Hide N Seek",
+      "displayNameZh": "躲猫猫",
+      "config": "hns.cfg",
+      "defaultMap": "3348038890",
+      "mapGroups": ["mg_hns"],
+      "maps": [
+        {
+          "name": "de_nuke_prophunt",
+          "workshopId": "3366748499",
+          "command": "host_workshop_map 3366748499"
+        },
+        {
+          "name": "de_overpass_prophunt",
+          "workshopId": "3382166635",
+          "command": "host_workshop_map 3382166635"
+        },
+        {
+          "name": "de_inferno_prophunt",
+          "workshopId": "3348038890",
+          "command": "host_workshop_map 3348038890"
+        },
+        {
+          "name": "de_vertigo_prophunt",
+          "workshopId": "3292648008",
+          "command": "host_workshop_map 3292648008"
+        },
+        {
+          "name": "de_mirage_prophunt",
+          "workshopId": "3287578956",
+          "command": "host_workshop_map 3287578956"
+        }
+      ]
+    },
+    {
+      "id": "soccer-soccer-cfg",
+      "name": "Soccer",
+      "displayNameZh": "足球模式",
+      "config": "soccer.cfg",
+      "defaultMap": "3238565662",
+      "mapGroups": ["mg_soccer"],
+      "maps": [
+        {
+          "name": "field",
+          "workshopId": "3238565662",
+          "command": "host_workshop_map 3238565662"
+        }
+      ]
+    },
+    {
+      "id": "course-course-cfg",
+      "name": "Course",
+      "displayNameZh": "闯关模式",
+      "config": "course.cfg",
+      "defaultMap": "3070455802",
+      "mapGroups": ["mg_course"],
+      "maps": [
+        {
+          "name": "cr_devisland_p1_v1",
+          "workshopId": "3076483842",
+          "command": "host_workshop_map 3076483842"
+        },
+        {
+          "name": "mg_switch_course_v2",
+          "workshopId": "3070439729",
+          "command": "host_workshop_map 3070439729"
+        },
+        {
+          "name": "cr_minecraft_jb_v2",
+          "workshopId": "3070896876",
+          "command": "host_workshop_map 3070896876"
+        },
+        {
+          "name": "mg_metro_course_v1",
+          "workshopId": "3070463151",
+          "command": "host_workshop_map 3070463151"
+        },
+        {
+          "name": "mg_alley_course_v2",
+          "workshopId": "3070455802",
+          "command": "host_workshop_map 3070455802"
+        },
+        {
+          "name": "mg_glave_course_v2",
+          "workshopId": "3070445185",
+          "command": "host_workshop_map 3070445185"
+        },
+        {
+          "name": "mg_office_course_v3",
+          "workshopId": "3070459211",
+          "command": "host_workshop_map 3070459211"
+        },
+        {
+          "name": "mg_metal_course_v2",
+          "workshopId": "3070464208",
+          "command": "host_workshop_map 3070464208"
+        },
+        {
+          "name": "mg_acrophobia_run_v2",
+          "workshopId": "3070463620",
+          "command": "host_workshop_map 3070463620"
+        },
+        {
+          "name": "mg_metro_course_s2",
+          "workshopId": "3071040020",
+          "command": "host_workshop_map 3071040020"
+        },
+        {
+          "name": "mg_circle_course_v3",
+          "workshopId": "3070434475",
+          "command": "host_workshop_map 3070434475"
+        },
+        {
+          "name": "mg_simpsons_course_v2",
+          "workshopId": "3070447697",
+          "command": "host_workshop_map 3070447697"
+        },
+        {
+          "name": "mg_sonic_course_v2",
+          "workshopId": "3070452642",
+          "command": "host_workshop_map 3070452642"
+        },
+        {
+          "name": "mg_sky_realm_v3",
+          "workshopId": "3070451616",
+          "command": "host_workshop_map 3070451616"
+        }
+      ]
+    },
+    {
+      "id": "deathrun-deathrun-cfg",
+      "name": "Deathrun",
+      "displayNameZh": "死亡奔跑",
+      "config": "deathrun.cfg",
+      "defaultMap": "3164611860",
+      "mapGroups": ["mg_deathrun"],
+      "maps": [
+        {
+          "name": "deathrun_playground",
+          "workshopId": "3164611860",
+          "command": "host_workshop_map 3164611860"
+        },
+        {
+          "name": "deathrun_egypt",
+          "workshopId": "3311285877",
+          "command": "host_workshop_map 3311285877"
+        },
+        {
+          "name": "deathrun_civilization",
+          "workshopId": "3188021118",
+          "command": "host_workshop_map 3188021118"
+        },
+        {
+          "name": "deathrun_iceworld_cs2",
+          "workshopId": "3083325292",
+          "command": "host_workshop_map 3083325292"
+        }
+      ]
+    },
+    {
+      "id": "minigames-minigames-cfg",
+      "name": "Minigames",
+      "displayNameZh": "小游戏",
+      "config": "minigames.cfg",
+      "defaultMap": "3082120895",
+      "mapGroups": ["mg_minigames"],
+      "maps": [
+        {
+          "name": "mg_skeet_multigames_v7",
+          "workshopId": "3082120895",
+          "command": "host_workshop_map 3082120895"
+        },
+        {
+          "name": "mg_lego_course_2",
+          "workshopId": "3202752274",
+          "command": "host_workshop_map 3202752274"
+        },
+        {
+          "name": "mg_warmcup_headshot",
+          "workshopId": "3076765511",
+          "command": "host_workshop_map 3076765511"
+        }
+      ]
+    },
+    {
+      "id": "scoutzknivez-scoutzknivez-cfg",
+      "name": "ScoutzKnivez",
+      "displayNameZh": "鸟狙与匕首",
+      "config": "scoutzknivez.cfg",
+      "defaultMap": "3073929825",
+      "mapGroups": ["mg_scoutzknivez"],
+      "maps": [
+        {
+          "name": "scoutzknivez_pure_cs2",
+          "workshopId": "3073929825",
+          "command": "host_workshop_map 3073929825"
+        },
+        {
+          "name": "ar_dizzy",
+          "workshopId": "3070553020",
+          "command": "host_workshop_map 3070553020"
+        }
+      ]
+    },
+    {
+      "id": "one-in-the-chamber-oitc-cfg",
+      "name": "One In The Chamber",
+      "displayNameZh": "一发入魂",
+      "config": "oitc.cfg",
+      "defaultMap": "ar_pool_day",
+      "mapGroups": ["mg_gg"],
+      "maps": [
+        {
+          "name": "ar_shoots",
+          "command": "changelevel ar_shoots"
+        },
+        {
+          "name": "ar_shoots_night",
+          "command": "changelevel ar_shoots_night"
+        },
+        {
+          "name": "ar_baggage",
+          "command": "changelevel ar_baggage"
+        },
+        {
+          "name": "ar_pool_day",
+          "command": "changelevel ar_pool_day"
+        },
+        {
+          "name": "speedball",
+          "workshopId": "3443206318",
+          "command": "host_workshop_map 3443206318"
+        },
+        {
+          "name": "aim_plywood",
+          "workshopId": "3118710028",
+          "command": "host_workshop_map 3118710028"
+        },
+        {
+          "name": "gg_lego_arena",
+          "workshopId": "3267768230",
+          "command": "host_workshop_map 3267768230"
+        },
+        {
+          "name": "de_indoor",
+          "workshopId": "3535917558",
+          "command": "host_workshop_map 3535917558"
+        },
+        {
+          "name": "de_assembly",
+          "workshopId": "3071005299",
+          "command": "host_workshop_map 3071005299"
+        },
+        {
+          "name": "fy_iceworld",
+          "workshopId": "3070238628",
+          "command": "host_workshop_map 3070238628"
+        },
+        {
+          "name": "daymare",
+          "workshopId": "3072640420",
+          "command": "host_workshop_map 3072640420"
+        },
+        {
+          "name": "mcdonalds",
+          "workshopId": "3134466699",
+          "command": "host_workshop_map 3134466699"
+        },
+        {
+          "name": "aim_theorem",
+          "workshopId": "3070348309",
+          "command": "host_workshop_map 3070348309"
+        },
+        {
+          "name": "de_safehouse",
+          "workshopId": "3070550406",
+          "command": "host_workshop_map 3070550406"
+        },
+        {
+          "name": "de_lake",
+          "workshopId": "3070563536",
+          "command": "host_workshop_map 3070563536"
+        },
+        {
+          "name": "de_bank",
+          "workshopId": "3070581293",
+          "command": "host_workshop_map 3070581293"
+        },
+        {
+          "name": "fun_bounce",
+          "workshopId": "3088183343",
+          "command": "host_workshop_map 3088183343"
+        },
+        {
+          "name": "1v1aim_map_longdustversion_d",
+          "workshopId": "3082605693",
+          "command": "host_workshop_map 3082605693"
+        },
+        {
+          "name": "ar_churches_s2r",
+          "workshopId": "3070291913",
+          "command": "host_workshop_map 3070291913"
+        },
+        {
+          "name": "aim_ag_texture_city_advanced",
+          "workshopId": "3082113929",
+          "command": "host_workshop_map 3082113929"
+        },
+        {
+          "name": "trainingoutside",
+          "workshopId": "3475270536",
+          "command": "host_workshop_map 3475270536"
+        },
+        {
+          "name": "shipment_version_1_0",
+          "workshopId": "3086555291",
+          "command": "host_workshop_map 3086555291"
+        },
+        {
+          "name": "aim_ag_texture2",
+          "workshopId": "3074961197",
+          "command": "host_workshop_map 3074961197"
+        },
+        {
+          "name": "aim_ag_texture_jungle",
+          "workshopId": "3095778105",
+          "command": "host_workshop_map 3095778105"
+        },
+        {
+          "name": "cs2_bloodstrike",
+          "workshopId": "3071890065",
+          "command": "host_workshop_map 3071890065"
+        },
+        {
+          "name": "gg_simpsons_vs_flanders_v2",
+          "workshopId": "3109232789",
+          "command": "host_workshop_map 3109232789"
+        },
+        {
+          "name": "school_d_environment_prefab",
+          "workshopId": "3343693110",
+          "command": "host_workshop_map 3343693110"
+        },
+        {
+          "name": "de_ema",
+          "workshopId": "3386116667",
+          "command": "host_workshop_map 3386116667"
+        },
+        {
+          "name": "twofort_cs2",
+          "workshopId": "3345551391",
+          "command": "host_workshop_map 3345551391"
+        },
+        {
+          "name": "paintit",
+          "workshopId": "3360723913",
+          "command": "host_workshop_map 3360723913"
+        },
+        {
+          "name": "kloce",
+          "workshopId": "3248340515",
+          "command": "host_workshop_map 3248340515"
+        },
+        {
+          "name": "gulag",
+          "workshopId": "3326465469",
+          "command": "host_workshop_map 3326465469"
+        },
+        {
+          "name": "de_rats_remake",
+          "workshopId": "3460962520",
+          "command": "host_workshop_map 3460962520"
+        },
+        {
+          "name": "de_mirage_bricks",
+          "workshopId": "3464733042",
+          "command": "host_workshop_map 3464733042"
+        },
+        {
+          "name": "de_splat",
+          "workshopId": "3439120481",
+          "command": "host_workshop_map 3439120481"
+        },
+        {
+          "name": "1v1v1v1beta04",
+          "workshopId": "3433012420",
+          "command": "host_workshop_map 3433012420"
+        },
+        {
+          "name": "gg_festspeedball",
+          "workshopId": "3111527644",
+          "command": "host_workshop_map 3111527644"
+        },
+        {
+          "name": "ar_blue_arena",
+          "workshopId": "3361478861",
+          "command": "host_workshop_map 3361478861"
+        },
+        {
+          "name": "gg_strafe_gg1",
+          "workshopId": "3331570055",
+          "command": "host_workshop_map 3331570055"
+        },
+        {
+          "name": "aim_shotty2_gg1",
+          "workshopId": "3360120483",
+          "command": "host_workshop_map 3360120483"
+        },
+        {
+          "name": "fy_hangemhigh",
+          "workshopId": "3437226954",
+          "command": "host_workshop_map 3437226954"
+        },
+        {
+          "name": "ar_combat_arena",
+          "workshopId": "3455068243",
+          "command": "host_workshop_map 3455068243"
+        },
+        {
+          "name": "ar_ds_cornered_gg1",
+          "workshopId": "3329405459",
+          "command": "host_workshop_map 3329405459"
+        },
+        {
+          "name": "awp_lego_2_destructible",
+          "workshopId": "3706720942",
+          "command": "host_workshop_map 3706720942"
+        }
+      ]
+    },
+    {
+      "id": "battle-ball-battle-cfg",
+      "name": "Battle Ball",
+      "displayNameZh": "战斗球",
+      "config": "battle.cfg",
+      "defaultMap": "3280650663",
+      "mapGroups": ["mg_battle"],
+      "maps": [
+        {
+          "name": "battleball",
+          "workshopId": "3280650663",
+          "command": "host_workshop_map 3280650663"
+        }
+      ]
+    },
+    {
+      "id": "battle-royale-br-cfg",
+      "name": "Battle Royale",
+      "displayNameZh": "大逃杀",
+      "config": "br.cfg",
+      "defaultMap": "3462095803",
+      "mapGroups": ["mg_battleroyale"],
+      "maps": [
+        {
+          "name": "br_t2",
+          "workshopId": "3462095803",
+          "command": "host_workshop_map 3462095803"
+        },
+        {
+          "name": "br_electrified",
+          "workshopId": "3330484099",
+          "command": "host_workshop_map 3330484099"
+        },
+        {
+          "name": "br_stacks",
+          "workshopId": "3297489255",
+          "command": "host_workshop_map 3297489255"
+        },
+        {
+          "name": "br_flood",
+          "workshopId": "3267454508",
+          "command": "host_workshop_map 3267454508"
+        },
+        {
+          "name": "minecraft",
+          "workshopId": "3186779271",
+          "command": "host_workshop_map 3186779271"
+        },
+        {
+          "name": "minecraft_hungergame",
+          "workshopId": "3240933254",
+          "command": "host_workshop_map 3240933254"
+        }
+      ]
+    },
+    {
+      "id": "casual-casual-cfg-2",
+      "name": "Casual",
+      "displayNameZh": "休闲模式",
+      "config": "casual.cfg",
+      "defaultMap": "de_dust2",
+      "mapGroups": ["mg_active", "mg_comp"],
+      "maps": [
+        {
+          "name": "de_ancient",
+          "command": "changelevel de_ancient"
+        },
+        {
+          "name": "de_anubis",
+          "command": "changelevel de_anubis"
+        },
+        {
+          "name": "de_inferno",
+          "command": "changelevel de_inferno"
+        },
+        {
+          "name": "de_mirage",
+          "command": "changelevel de_mirage"
+        },
+        {
+          "name": "de_nuke",
+          "command": "changelevel de_nuke"
+        },
+        {
+          "name": "de_dust2",
+          "command": "changelevel de_dust2"
+        },
+        {
+          "name": "de_cache",
+          "command": "changelevel de_cache"
+        },
+        {
+          "name": "de_ancient_night",
+          "command": "changelevel de_ancient_night"
+        },
+        {
+          "name": "de_train",
+          "command": "changelevel de_train"
+        },
+        {
+          "name": "de_overpass",
+          "command": "changelevel de_overpass"
+        },
+        {
+          "name": "de_vertigo",
+          "command": "changelevel de_vertigo"
+        },
+        {
+          "name": "de_boulder",
+          "command": "changelevel de_boulder"
+        },
+        {
+          "name": "de_fachwerk",
+          "command": "changelevel de_fachwerk"
+        },
+        {
+          "name": "cs_shelter",
+          "command": "changelevel cs_shelter"
+        },
+        {
+          "name": "cs_office",
+          "command": "changelevel cs_office"
+        },
+        {
+          "name": "cs_italy",
+          "command": "changelevel cs_italy"
+        },
+        {
+          "name": "de_warden",
+          "workshopId": "3256988376",
+          "command": "host_workshop_map 3256988376"
+        },
+        {
+          "name": "de_stronghold",
+          "workshopId": "3477094554",
+          "command": "host_workshop_map 3477094554"
+        },
+        {
+          "name": "cs_alpine",
+          "workshopId": "3221491619",
+          "command": "host_workshop_map 3221491619"
+        },
+        {
+          "name": "de_golden",
+          "workshopId": "3286163323",
+          "command": "host_workshop_map 3286163323"
+        },
+        {
+          "name": "de_palacio",
+          "workshopId": "3249860053",
+          "command": "host_workshop_map 3249860053"
+        },
+        {
+          "name": "cs_agency",
+          "workshopId": "3339983232",
+          "command": "host_workshop_map 3339983232"
+        },
+        {
+          "name": "de_basalt",
+          "workshopId": "3329258290",
+          "command": "host_workshop_map 3329258290"
+        },
+        {
+          "name": "de_edin",
+          "workshopId": "3328169568",
+          "command": "host_workshop_map 3328169568"
+        },
+        {
+          "name": "de_assembly",
+          "workshopId": "3071005299",
+          "command": "host_workshop_map 3071005299"
+        },
+        {
+          "name": "de_cbble",
+          "workshopId": "3329387648",
+          "command": "host_workshop_map 3329387648"
+        },
+        {
+          "name": "de_splinter",
+          "workshopId": "3691046714",
+          "command": "host_workshop_map 3691046714"
+        },
+        {
+          "name": "de_biome",
+          "workshopId": "3075706807",
+          "command": "host_workshop_map 3075706807"
+        },
+        {
+          "name": "mp_raid",
+          "workshopId": "3070346180",
+          "command": "host_workshop_map 3070346180"
+        },
+        {
+          "name": "de_mutiny",
+          "workshopId": "3070766070",
+          "command": "host_workshop_map 3070766070"
+        },
+        {
+          "name": "cs_assault",
+          "workshopId": "3694043544",
+          "command": "host_workshop_map 3694043544"
+        },
+        {
+          "name": "de_ruins_d_prefab",
+          "workshopId": "3072352643",
+          "command": "host_workshop_map 3072352643"
+        },
+        {
+          "name": "cs_militia",
+          "workshopId": "3089953774",
+          "command": "host_workshop_map 3089953774"
+        },
+        {
+          "name": "de_aztec_hr",
+          "workshopId": "3079692971",
+          "command": "host_workshop_map 3079692971"
+        },
+        {
+          "name": "de_akiba",
+          "workshopId": "3108513658",
+          "command": "host_workshop_map 3108513658"
+        },
+        {
+          "name": "factory",
+          "workshopId": "3681322159",
+          "command": "host_workshop_map 3681322159"
+        },
+        {
+          "name": "cs_insertion2",
+          "workshopId": "3236615060",
+          "command": "host_workshop_map 3236615060"
+        },
+        {
+          "name": "de_mills",
+          "workshopId": "3152430710",
+          "command": "host_workshop_map 3152430710"
+        },
+        {
+          "name": "de_thera",
+          "workshopId": "3121217565",
+          "command": "host_workshop_map 3121217565"
+        },
+        {
+          "name": "de_season",
+          "workshopId": "3073892687",
+          "command": "host_workshop_map 3073892687"
+        },
+        {
+          "name": "de_ema",
+          "workshopId": "3386116667",
+          "command": "host_workshop_map 3386116667"
+        },
+        {
+          "name": "twofort_cs2",
+          "workshopId": "3345551391",
+          "command": "host_workshop_map 3345551391"
+        },
+        {
+          "name": "de_rats_remake",
+          "workshopId": "3460962520",
+          "command": "host_workshop_map 3460962520"
+        },
+        {
+          "name": "de_mirage_bricks",
+          "workshopId": "3464733042",
+          "command": "host_workshop_map 3464733042"
+        },
+        {
+          "name": "project_phoenix",
+          "workshopId": "3683699332",
+          "command": "host_workshop_map 3683699332"
+        },
+        {
+          "name": "ultimate_free_nuke",
+          "workshopId": "3687298714",
+          "command": "host_workshop_map 3687298714"
+        }
+      ]
+    },
+    {
+      "id": "casual-1-6-casual-1-6-cfg",
+      "name": "Casual (1.6)",
+      "displayNameZh": "经典 1.6 休闲",
+      "config": "casual-1.6.cfg",
+      "defaultMap": "3201205818",
+      "mapGroups": ["mg_casual-1.6"],
+      "maps": [
+        {
+          "name": "as_oilrig",
+          "workshopId": "3104677430",
+          "command": "host_workshop_map 3104677430"
+        },
+        {
+          "name": "cs_assult_classic",
+          "workshopId": "3215705579",
+          "command": "host_workshop_map 3215705579"
+        },
+        {
+          "name": "de_aztec_classic",
+          "workshopId": "3213800338",
+          "command": "host_workshop_map 3213800338"
+        },
+        {
+          "name": "de_dust_classic",
+          "workshopId": "3078095785",
+          "command": "host_workshop_map 3078095785"
+        },
+        {
+          "name": "de_dust2_classic",
+          "workshopId": "3201205818",
+          "command": "host_workshop_map 3201205818"
+        },
+        {
+          "name": "cs_italy_classic",
+          "workshopId": "3212419403",
+          "command": "host_workshop_map 3212419403"
+        },
+        {
+          "name": "cs_militia_classic",
+          "workshopId": "3144773563",
+          "command": "host_workshop_map 3144773563"
+        },
+        {
+          "name": "de_nuke_classic",
+          "workshopId": "3205793205",
+          "command": "host_workshop_map 3205793205"
+        },
+        {
+          "name": "cs_office_classic",
+          "workshopId": "3216844784",
+          "command": "host_workshop_map 3216844784"
+        },
+        {
+          "name": "de_survivor_classic_m",
+          "workshopId": "3217247541",
+          "command": "host_workshop_map 3217247541"
+        }
+      ]
+    },
+    {
+      "id": "competitive-valve-valve-competitive-cfg",
+      "name": "Competitive (Valve)",
+      "displayNameZh": "Valve 竞技",
+      "config": "valve-competitive.cfg",
+      "defaultMap": "de_dust2",
+      "mapGroups": ["mg_valve_competitive"],
+      "maps": [
+        {
+          "name": "de_dust2",
+          "command": "changelevel de_dust2"
+        },
+        {
+          "name": "de_mirage",
+          "command": "changelevel de_mirage"
+        },
+        {
+          "name": "de_inferno",
+          "command": "changelevel de_inferno"
+        },
+        {
+          "name": "de_ancient_night",
+          "command": "changelevel de_ancient_night"
+        },
+        {
+          "name": "de_nuke",
+          "command": "changelevel de_nuke"
+        },
+        {
+          "name": "de_train",
+          "command": "changelevel de_train"
+        },
+        {
+          "name": "de_overpass",
+          "command": "changelevel de_overpass"
+        },
+        {
+          "name": "de_anubis",
+          "command": "changelevel de_anubis"
+        },
+        {
+          "name": "de_vertigo",
+          "command": "changelevel de_vertigo"
+        },
+        {
+          "name": "de_boulder",
+          "command": "changelevel de_boulder"
+        },
+        {
+          "name": "de_fachwerk",
+          "command": "changelevel de_fachwerk"
+        },
+        {
+          "name": "cs_shelter",
+          "command": "changelevel cs_shelter"
+        },
+        {
+          "name": "cs_office",
+          "command": "changelevel cs_office"
+        },
+        {
+          "name": "cs_italy",
+          "command": "changelevel cs_italy"
+        }
+      ]
+    },
+    {
+      "id": "deathmatch-ffa-valve-valve-deathmatch-freeforall-cfg",
+      "name": "Deathmatch FFA (Valve)",
+      "displayNameZh": "Valve 自由死亡竞赛",
+      "config": "valve-deathmatch-freeforall.cfg",
+      "defaultMap": "de_dust2",
+      "mapGroups": ["mg_valve_deathmatch"],
+      "maps": [
+        {
+          "name": "de_dust2",
+          "command": "changelevel de_dust2"
+        },
+        {
+          "name": "de_mirage",
+          "command": "changelevel de_mirage"
+        },
+        {
+          "name": "de_inferno",
+          "command": "changelevel de_inferno"
+        },
+        {
+          "name": "de_ancient_night",
+          "command": "changelevel de_ancient_night"
+        },
+        {
+          "name": "de_nuke",
+          "command": "changelevel de_nuke"
+        },
+        {
+          "name": "de_train",
+          "command": "changelevel de_train"
+        },
+        {
+          "name": "de_overpass",
+          "command": "changelevel de_overpass"
+        },
+        {
+          "name": "de_anubis",
+          "command": "changelevel de_anubis"
+        },
+        {
+          "name": "de_vertigo",
+          "command": "changelevel de_vertigo"
+        },
+        {
+          "name": "de_boulder",
+          "command": "changelevel de_boulder"
+        },
+        {
+          "name": "de_fachwerk",
+          "command": "changelevel de_fachwerk"
+        },
+        {
+          "name": "cs_shelter",
+          "command": "changelevel cs_shelter"
+        },
+        {
+          "name": "cs_office",
+          "command": "changelevel cs_office"
+        },
+        {
+          "name": "cs_italy",
+          "command": "changelevel cs_italy"
+        }
+      ]
+    },
+    {
+      "id": "arms-race-valve-valve-armsrace-cfg",
+      "name": "Arms Race (Valve)",
+      "displayNameZh": "Valve 军备竞赛",
+      "config": "valve-armsrace.cfg",
+      "defaultMap": "ar_pool_day",
+      "mapGroups": ["mg_valve_arms_race"],
+      "maps": [
+        {
+          "name": "ar_baggage",
+          "command": "changelevel ar_baggage"
+        },
+        {
+          "name": "ar_shoots",
+          "command": "changelevel ar_shoots"
+        },
+        {
+          "name": "ar_shoots_night",
+          "command": "changelevel ar_shoots_night"
+        },
+        {
+          "name": "ar_pool_day",
+          "command": "changelevel ar_pool_day"
+        }
+      ]
+    },
+    {
+      "id": "wingman-valve-valve-wingman-cfg",
+      "name": "Wingman (Valve)",
+      "displayNameZh": "Valve 搭档模式",
+      "config": "valve-wingman.cfg",
+      "defaultMap": "de_nuke",
+      "mapGroups": ["mg_valve_wingman"],
+      "maps": [
+        {
+          "name": "de_poseidon",
+          "command": "changelevel de_poseidon"
+        },
+        {
+          "name": "de_overpass",
+          "command": "changelevel de_overpass"
+        },
+        {
+          "name": "de_vertigo",
+          "command": "changelevel de_vertigo"
+        },
+        {
+          "name": "de_nuke",
+          "command": "changelevel de_nuke"
+        },
+        {
+          "name": "de_inferno",
+          "command": "changelevel de_inferno"
+        },
+        {
+          "name": "de_debris",
+          "command": "changelevel de_debris"
+        },
+        {
+          "name": "de_eldorado",
+          "command": "changelevel de_eldorado"
+        }
+      ]
+    },
+    {
+      "id": "retakes-valve-valve-retake-cfg",
+      "name": "Retakes (Valve)",
+      "displayNameZh": "Valve 回防模式",
+      "config": "valve-retake.cfg",
+      "defaultMap": "de_dust2",
+      "mapGroups": ["mg_valve_retakes"],
+      "maps": [
+        {
+          "name": "de_dust2",
+          "command": "changelevel de_dust2"
+        },
+        {
+          "name": "de_mirage",
+          "command": "changelevel de_mirage"
+        },
+        {
+          "name": "de_inferno",
+          "command": "changelevel de_inferno"
+        },
+        {
+          "name": "de_ancient_night",
+          "command": "changelevel de_ancient_night"
+        },
+        {
+          "name": "de_nuke",
+          "command": "changelevel de_nuke"
+        },
+        {
+          "name": "de_train",
+          "command": "changelevel de_train"
+        },
+        {
+          "name": "de_overpass",
+          "command": "changelevel de_overpass"
+        },
+        {
+          "name": "de_anubis",
+          "command": "changelevel de_anubis"
+        },
+        {
+          "name": "de_vertigo",
+          "command": "changelevel de_vertigo"
+        }
+      ]
+    },
+    {
+      "id": "competitive-45-45-cfg",
+      "name": "Competitive 45°",
+      "displayNameZh": "45° 竞技",
+      "config": "45.cfg",
+      "defaultMap": "3276886893",
+      "mapGroups": ["mg_45"],
+      "maps": [
+        {
+          "name": "de_vertigo_45",
+          "workshopId": "3276886893",
+          "command": "host_workshop_map 3276886893"
+        },
+        {
+          "name": "de_anubis_silly",
+          "workshopId": "3245985233",
+          "command": "host_workshop_map 3245985233"
+        },
+        {
+          "name": "de_overpass_45",
+          "workshopId": "3270066070",
+          "command": "host_workshop_map 3270066070"
+        },
+        {
+          "name": "de_nuke_silly",
+          "workshopId": "3245245780",
+          "command": "host_workshop_map 3245245780"
+        },
+        {
+          "name": "de_mirage45",
+          "workshopId": "3270516952",
+          "command": "host_workshop_map 3270516952"
+        },
+        {
+          "name": "de_train_twyxe",
+          "workshopId": "3406937162",
+          "command": "host_workshop_map 3406937162"
+        }
+      ]
+    }
+  ]
+}

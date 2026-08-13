@@ -1,0 +1,23 @@
+[Unit]
+Description=YACSRCON Next.js server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=wudi7mi
+Group=wudi7mi
+WorkingDirectory=/home/wudi7mi/yacsrcon
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+Environment=PORT=21590
+Environment=HOSTNAME=0.0.0.0
+EnvironmentFile=/home/wudi7mi/yacsrcon/.env.local
+ExecStart=/home/wudi7mi/.nvm/versions/node/v24.18.0/bin/node .next/standalone/server.js
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,18 @@
+export const CSS_PERMISSIONS = [
+  { flag: "@css/reservation", label: "预留席位" },
+  { flag: "@css/generic", label: "基础管理" },
+  { flag: "@css/kick", label: "踢出玩家" },
+  { flag: "@css/ban", label: "封禁玩家" },
+  { flag: "@css/unban", label: "解除封禁" },
+  { flag: "@css/vip", label: "VIP 权限" },
+  { flag: "@css/slay", label: "处置玩家" },
+  { flag: "@css/changemap", label: "切换地图" },
+  { flag: "@css/cvar", label: "修改 CVar" },
+  { flag: "@css/config", label: "执行配置" },
+  { flag: "@css/chat", label: "管理聊天" },
+  { flag: "@css/vote", label: "发起投票" },
+  { flag: "@css/password", label: "服务器密码" },
+  { flag: "@css/rcon", label: "RCON 命令" },
+  { flag: "@css/cheats", label: "作弊命令" },
+  { flag: "@css/root", label: "全部权限" },
+] as const;

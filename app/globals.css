@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #e8edf2;
+  --muted: #8c99a6;
+  --panel: #151b22;
+  --panel-soft: #1b232c;
+  --line: #2a3540;
+  --accent: #8ee64a;
+  --warning: #f0b952;
+  --danger: #ef6b73;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #0e1318;
+  color: var(--ink);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.form-input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0f1419;
+  padding: 9px 11px;
+  color: white;
+  font-size: 13px;
+  outline: none;
+}
+.form-input:focus {
+  border-color: var(--accent);
+}
