@@ -4,20 +4,29 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   Check,
-  ChevronDown,
   Plus,
   Save,
-  Shield,
-  Trash2,
   UserPlus,
-  X,
 } from "lucide-react";
-import { CSS_PERMISSIONS } from "@/lib/admin-permissions";
-import { toSteamId64 } from "@/lib/steam-id";
+import {
+  AddAdminDialog,
+  AdminRow,
+  ConfirmDialog,
+  GroupRow,
+  TabButton,
+} from "@/components/admin/editor-components";
+import {
+  createGroup,
+  deleteAdmin,
+  deleteGroup,
+  findDuplicateIdentities,
+  renameGroup,
+  updateAdmin,
+  updateGroup,
+} from "@/lib/admin-editor";
+import { useApiRequest } from "@/hooks/use-api-request";
 import type {
   AdminConfiguration,
-  CssAdmin,
-  CssAdminGroup,
   Player,
 } from "@/lib/types";
 
@@ -28,7 +37,14 @@ const emptyConfig: AdminConfiguration = {
   overrides: {},
 };
 
-export default function AdminManager({ players }: { players: Player[] }) {
+export default function AdminManager({
+  players,
+  onDirtyChange,
+}: {
+  players: Player[];
+  onDirtyChange?: (dirty: boolean) => void;
+}) {
+  const request = useApiRequest();
   const [config, setConfig] = useState<AdminConfiguration>(emptyConfig);
   const [baseline, setBaseline] = useState("");
   const [loading, setLoading] = useState(true);
@@ -44,9 +60,9 @@ export default function AdminManager({ players }: { players: Player[] }) {
     setLoading(true);
     setNotice(null);
     try {
-      const response = await fetch("/api/admins", { cache: "no-store" });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "读取管理员配置失败");
+      const body = await request<AdminConfiguration>("/api/admins", {
+        cache: "no-store",
+      });
       setConfig(body);
       setBaseline(JSON.stringify(body));
     } catch (error) {
@@ -57,7 +73,7 @@ export default function AdminManager({ players }: { players: Player[] }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [request]);
 
   useEffect(() => {
     const timer = setTimeout(() => void load(), 0);
@@ -65,27 +81,35 @@ export default function AdminManager({ players }: { players: Player[] }) {
   }, [load]);
 
   const dirty = baseline !== "" && JSON.stringify(config) !== baseline;
-  const duplicateIdentities = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const admin of Object.values(config.admins)) {
-      counts.set(admin.identity, (counts.get(admin.identity) ?? 0) + 1);
-    }
-    return new Set(
-      [...counts].filter(([, count]) => count > 1).map(([id]) => id),
-    );
-  }, [config.admins]);
+  const duplicateIdentities = useMemo(
+    () => findDuplicateIdentities(config),
+    [config],
+  );
+
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+    return () => onDirtyChange?.(false);
+  }, [dirty, onDirtyChange]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
+  }, [dirty]);
 
   async function save() {
     setSaving(true);
     setNotice(null);
     try {
-      const response = await fetch("/api/admins", {
+      const body = await request<{ reloadWarning?: string }>("/api/admins", {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(config),
       });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "保存管理员配置失败");
       setBaseline(JSON.stringify(config));
       setConfirmSave(false);
       setNotice({
@@ -105,48 +129,11 @@ export default function AdminManager({ players }: { players: Player[] }) {
     }
   }
 
-  function updateAdmin(name: string, admin: CssAdmin) {
-    setConfig((current) => ({
-      ...current,
-      admins: { ...current.admins, [name]: admin },
-    }));
-  }
-
-  function updateGroup(name: string, group: CssAdminGroup) {
-    setConfig((current) => ({
-      ...current,
-      groups: { ...current.groups, [name]: group },
-    }));
-  }
-
-  function renameGroup(previous: string, next: string) {
-    const name = next.trim();
-    if (
-      name === previous ||
-      !/^#[a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+$/.test(name) ||
-      config.groups[name]
-    ) {
-      return false;
-    }
-    setConfig((current) => {
-      const groups: AdminConfiguration["groups"] = {};
-      for (const [groupName, group] of Object.entries(current.groups)) {
-        groups[groupName === previous ? name : groupName] = group;
-      }
-      const admins = Object.fromEntries(
-        Object.entries(current.admins).map(([adminName, admin]) => [
-          adminName,
-          {
-            ...admin,
-            groups: admin.groups?.map((group) =>
-              group === previous ? name : group,
-            ),
-          },
-        ]),
-      );
-      return { ...current, groups, admins };
-    });
-    setEditingGroup(name);
+  function renameAdminGroup(previous: string, next: string) {
+    const renamed = renameGroup(config, previous, next);
+    if (!renamed) return false;
+    setConfig(renamed);
+    setEditingGroup(next.trim());
     return true;
   }
 
@@ -241,13 +228,11 @@ export default function AdminManager({ players }: { players: Player[] }) {
                 onToggle={() =>
                   setEditingAdmin(editingAdmin === name ? null : name)
                 }
-                onChange={(value) => updateAdmin(name, value)}
+                onChange={(value) =>
+                  setConfig((current) => updateAdmin(current, name, value))
+                }
                 onDelete={() => {
-                  setConfig((current) => {
-                    const admins = { ...current.admins };
-                    delete admins[name];
-                    return { ...current, admins };
-                  });
+                  setConfig((current) => deleteAdmin(current, name));
                   setEditingAdmin(null);
                 }}
               />
@@ -260,17 +245,9 @@ export default function AdminManager({ players }: { players: Player[] }) {
             <button
               type="button"
               onClick={() => {
-                let index = 1;
-                let name = "#custom/group";
-                while (config.groups[name]) name = `#custom/group-${++index}`;
-                setConfig((current) => ({
-                  ...current,
-                  groups: {
-                    ...current.groups,
-                    [name]: { flags: [], immunity: 0 },
-                  },
-                }));
-                setEditingGroup(name);
+                const created = createGroup(config);
+                setConfig(created.config);
+                setEditingGroup(created.name);
               }}
               className="flex h-9 items-center gap-2 rounded-lg border border-[var(--line)] px-3 text-xs hover:border-[var(--accent)]"
             >
@@ -290,14 +267,12 @@ export default function AdminManager({ players }: { players: Player[] }) {
                 onToggle={() =>
                   setEditingGroup(editingGroup === name ? null : name)
                 }
-                onChange={(value) => updateGroup(name, value)}
-                onRename={(value) => renameGroup(name, value)}
+                onChange={(value) =>
+                  setConfig((current) => updateGroup(current, name, value))
+                }
+                onRename={(value) => renameAdminGroup(name, value)}
                 onDelete={() => {
-                  setConfig((current) => {
-                    const groups = { ...current.groups };
-                    delete groups[name];
-                    return { ...current, groups };
-                  });
+                  setConfig((current) => deleteGroup(current, name) ?? current);
                   setEditingGroup(null);
                 }}
               />
@@ -316,7 +291,7 @@ export default function AdminManager({ players }: { players: Player[] }) {
           }
           onClose={() => setAddOpen(false)}
           onAdd={(name, admin) => {
-            updateAdmin(name, admin);
+            setConfig((current) => updateAdmin(current, name, admin));
             setEditingAdmin(name);
             setAddOpen(false);
           }}
@@ -330,515 +305,5 @@ export default function AdminManager({ players }: { players: Player[] }) {
         />
       )}
     </>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`border-b-2 px-4 py-3 text-sm ${active ? "border-[var(--accent)] text-white" : "border-transparent text-[var(--muted)]"}`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function AdminRow({
-  name,
-  admin,
-  groups,
-  expanded,
-  duplicate,
-  onToggle,
-  onChange,
-  onDelete,
-}: {
-  name: string;
-  admin: CssAdmin;
-  groups: string[];
-  expanded: boolean;
-  duplicate: boolean;
-  onToggle: () => void;
-  onChange: (value: CssAdmin) => void;
-  onDelete: () => void;
-}) {
-  return (
-    <div
-      className={`overflow-hidden rounded-lg border bg-[var(--panel)] ${duplicate ? "border-[var(--danger)]" : "border-[var(--line)]"}`}
-    >
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left"
-      >
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[var(--panel-soft)] text-[var(--accent)]">
-          <Shield size={16} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium">{name}</span>
-          <span className="mono mt-1 block text-[10px] text-[var(--muted)]">
-            {admin.identity}
-          </span>
-        </span>
-        <span className="hidden text-xs text-[var(--muted)] sm:block">
-          {admin.groups?.join(", ") || "直接授权"}
-        </span>
-        <ChevronDown
-          size={16}
-          className={`text-[var(--muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
-        />
-      </button>
-      {expanded && (
-        <div className="border-t border-[var(--line)] p-4">
-          {duplicate && (
-            <p className="mb-3 text-xs text-[var(--danger)]">
-              此 SteamID64 已被其他管理员使用。
-            </p>
-          )}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="SteamID64">
-              <input
-                value={admin.identity}
-                onChange={(event) =>
-                  onChange({ ...admin, identity: event.target.value.trim() })
-                }
-                className="form-input mono"
-              />
-            </Field>
-            <Field label="个人免疫等级">
-              <input
-                type="number"
-                min="0"
-                max="999"
-                value={admin.immunity ?? ""}
-                placeholder="继承权限组"
-                onChange={(event) =>
-                  onChange({
-                    ...admin,
-                    immunity:
-                      event.target.value === ""
-                        ? undefined
-                        : Number(event.target.value),
-                  })
-                }
-                className="form-input"
-              />
-            </Field>
-          </div>
-          <div className="mt-4">
-            <p className="mb-2 text-xs text-[var(--muted)]">所属权限组</p>
-            <div className="flex flex-wrap gap-2">
-              {groups.map((group) => (
-                <CheckOption
-                  key={group}
-                  checked={admin.groups?.includes(group) ?? false}
-                  label={group}
-                  onChange={(checked) =>
-                    onChange({
-                      ...admin,
-                      groups: checked
-                        ? [...(admin.groups ?? []), group]
-                        : (admin.groups ?? []).filter((item) => item !== group),
-                    })
-                  }
-                />
-              ))}
-            </div>
-          </div>
-          <FlagEditor
-            className="mt-4"
-            flags={admin.flags ?? []}
-            label="个人附加权限"
-            onChange={(flags) =>
-              onChange({ ...admin, flags: flags.length ? flags : undefined })
-            }
-          />
-          <div className="mt-5 flex justify-end">
-            <button
-              type="button"
-              onClick={onDelete}
-              className="flex items-center gap-2 text-xs text-[var(--danger)]"
-            >
-              <Trash2 size={14} /> 删除管理员
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function GroupRow({
-  name,
-  group,
-  expanded,
-  inUse,
-  onToggle,
-  onChange,
-  onRename,
-  onDelete,
-}: {
-  name: string;
-  group: CssAdminGroup;
-  expanded: boolean;
-  inUse: boolean;
-  onToggle: () => void;
-  onChange: (value: CssAdminGroup) => void;
-  onRename: (name: string) => boolean;
-  onDelete: () => void;
-}) {
-  const [nameDraft, setNameDraft] = useState(name);
-  return (
-    <div className="overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--panel)]">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left"
-      >
-        <span className="grid size-9 place-items-center rounded-lg bg-[var(--panel-soft)] text-[var(--accent)]">
-          <Shield size={16} />
-        </span>
-        <span className="mono min-w-0 flex-1 truncate text-sm">{name}</span>
-        <span className="text-xs text-[var(--muted)]">
-          {group.flags.length} 项权限 · 免疫 {group.immunity ?? 0}
-        </span>
-        <ChevronDown
-          size={16}
-          className={`text-[var(--muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
-        />
-      </button>
-      {expanded && (
-        <div className="border-t border-[var(--line)] p-4">
-          <div className="grid max-w-2xl gap-4 sm:grid-cols-2">
-            <Field label="权限组名称">
-              <input
-                value={nameDraft}
-                onChange={(event) => setNameDraft(event.target.value)}
-                onBlur={() => {
-                  if (!onRename(nameDraft)) setNameDraft(name);
-                }}
-                className="form-input mono"
-              />
-            </Field>
-            <Field label="免疫等级">
-              <input
-                type="number"
-                min="0"
-                max="999"
-                value={group.immunity ?? 0}
-                onChange={(event) =>
-                  onChange({ ...group, immunity: Number(event.target.value) })
-                }
-                className="form-input"
-              />
-            </Field>
-          </div>
-          <FlagEditor
-            className="mt-4"
-            flags={group.flags}
-            label="权限"
-            onChange={(flags) => onChange({ ...group, flags })}
-          />
-          <div className="mt-5 flex justify-end">
-            <button
-              type="button"
-              disabled={inUse}
-              onClick={onDelete}
-              title={inUse ? "仍有管理员使用此权限组" : "删除权限组"}
-              className="flex items-center gap-2 text-xs text-[var(--danger)] disabled:cursor-not-allowed disabled:opacity-35"
-            >
-              <Trash2 size={14} /> 删除权限组
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function FlagEditor({
-  flags,
-  label,
-  onChange,
-  className = "",
-}: {
-  flags: string[];
-  label: string;
-  onChange: (flags: string[]) => void;
-  className?: string;
-}) {
-  const known = new Set(CSS_PERMISSIONS.map((item) => item.flag));
-  const custom = flags.filter((item) => !known.has(item as never));
-  return (
-    <div className={className}>
-      <p className="mb-2 text-xs text-[var(--muted)]">{label}</p>
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-        {CSS_PERMISSIONS.map((permission) => (
-          <CheckOption
-            key={permission.flag}
-            checked={flags.includes(permission.flag)}
-            label={permission.label}
-            hint={permission.flag}
-            onChange={(checked) =>
-              onChange(
-                checked
-                  ? [...flags, permission.flag]
-                  : flags.filter((item) => item !== permission.flag),
-              )
-            }
-          />
-        ))}
-      </div>
-      <Field label="自定义权限（每行一个）" className="mt-3">
-        <textarea
-          rows={3}
-          value={custom.join("\n")}
-          onChange={(event) => {
-            const next = event.target.value
-              .split(/\s+/)
-              .map((item) => item.trim())
-              .filter(Boolean);
-            onChange([
-              ...flags.filter((item) => known.has(item as never)),
-              ...next,
-            ]);
-          }}
-          className="form-input mono resize-y"
-          placeholder="@custom/prac"
-        />
-      </Field>
-    </div>
-  );
-}
-
-function CheckOption({
-  checked,
-  label,
-  hint,
-  onChange,
-}: {
-  checked: boolean;
-  label: string;
-  hint?: string;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <label
-      className={`flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 ${checked ? "border-[#3c6521] bg-[#172513]" : "border-[var(--line)] bg-[#11171d]"}`}
-    >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        className="accent-[#8ee64a]"
-      />
-      <span className="min-w-0 text-xs">
-        <span className="block">{label}</span>
-        {hint && (
-          <span className="mono mt-0.5 block truncate text-[9px] text-[var(--muted)]">
-            {hint}
-          </span>
-        )}
-      </span>
-    </label>
-  );
-}
-
-function Field({
-  label,
-  children,
-  className = "",
-}: {
-  label: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <label className={`block ${className}`}>
-      <span className="mb-2 block text-xs text-[var(--muted)]">{label}</span>
-      {children}
-    </label>
-  );
-}
-
-function AddAdminDialog({
-  players,
-  groups,
-  existingNames,
-  existingIds,
-  onClose,
-  onAdd,
-}: {
-  players: Player[];
-  groups: string[];
-  existingNames: Set<string>;
-  existingIds: Set<string>;
-  onClose: () => void;
-  onAdd: (name: string, admin: CssAdmin) => void;
-}) {
-  const [name, setName] = useState("");
-  const [identity, setIdentity] = useState("");
-  const [group, setGroup] = useState(groups[0] ?? "");
-  const valid =
-    name.trim().length > 0 &&
-    name.trim().length <= 64 &&
-    /^7656119\d{10}$/.test(identity) &&
-    !existingNames.has(name.trim()) &&
-    !existingIds.has(identity) &&
-    Boolean(group);
-  return (
-    <div className="fixed inset-0 z-40 grid place-items-center bg-black/70 p-4">
-      <div className="w-full max-w-lg rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5">
-        <div className="mb-5 flex items-center justify-between">
-          <div>
-            <h2 className="font-semibold">添加游戏管理员</h2>
-            <p className="mt-1 text-xs text-[var(--muted)]">
-              选择在线玩家，或手动输入 SteamID64。
-            </p>
-          </div>
-          <button type="button" onClick={onClose} title="关闭">
-            <X size={18} />
-          </button>
-        </div>
-        {players.length > 0 && (
-          <Field label="从在线玩家选择" className="mb-4">
-            <select
-              className="form-input"
-              defaultValue=""
-              onChange={(event) => {
-                const player = players.find(
-                  (item) => item.userid === event.target.value,
-                );
-                if (player) {
-                  setName(player.name);
-                  setIdentity(toSteamId64(player.steamId));
-                }
-              }}
-            >
-              <option value="">选择玩家...</option>
-              {players.map((player) => (
-                <option key={player.userid} value={player.userid}>
-                  {player.name} · {player.steamId}
-                </option>
-              ))}
-            </select>
-          </Field>
-        )}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="显示名称">
-            <input
-              value={name}
-              maxLength={64}
-              onChange={(event) => setName(event.target.value)}
-              className="form-input"
-              placeholder="玩家名称"
-            />
-          </Field>
-          <Field label="SteamID64">
-            <input
-              value={identity}
-              onChange={(event) => setIdentity(event.target.value.trim())}
-              className="form-input mono"
-              placeholder="7656119..."
-            />
-          </Field>
-        </div>
-        <Field label="权限组" className="mt-4">
-          <select
-            value={group}
-            onChange={(event) => setGroup(event.target.value)}
-            className="form-input"
-          >
-            {groups.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        </Field>
-        {existingNames.has(name.trim()) && (
-          <p className="mt-3 text-xs text-[var(--danger)]">
-            管理员名称已存在。
-          </p>
-        )}
-        {existingIds.has(identity) && (
-          <p className="mt-3 text-xs text-[var(--danger)]">
-            SteamID64 已经是管理员。
-          </p>
-        )}
-        <div className="mt-5 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm"
-          >
-            取消
-          </button>
-          <button
-            type="button"
-            disabled={!valid}
-            onClick={() => onAdd(name.trim(), { identity, groups: [group] })}
-            className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[#15200d] disabled:opacity-40"
-          >
-            添加
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ConfirmDialog({
-  saving,
-  onCancel,
-  onConfirm,
-}: {
-  saving: boolean;
-  onCancel: () => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-40 grid place-items-center bg-black/70 p-4">
-      <div className="w-full max-w-md rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5">
-        <div className="flex items-start gap-3">
-          <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#4a3215] text-[var(--warning)]">
-            <AlertTriangle size={18} />
-          </span>
-          <div>
-            <h2 className="font-semibold">确认保存管理员配置</h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              系统会先备份三个管理员配置文件，再原子写入并重新加载
-              CounterStrikeSharp 管理员。
-            </p>
-          </div>
-        </div>
-        <div className="mt-5 flex justify-end gap-2">
-          <button
-            type="button"
-            disabled={saving}
-            onClick={onCancel}
-            className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm"
-          >
-            取消
-          </button>
-          <button
-            type="button"
-            disabled={saving}
-            onClick={onConfirm}
-            className="rounded-lg bg-[var(--warning)] px-4 py-2 text-sm font-semibold text-[#251a08]"
-          >
-            {saving ? "正在保存..." : "确认保存"}
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }

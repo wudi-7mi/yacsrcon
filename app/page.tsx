@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/lib/auth";
-import Dashboard from "@/components/dashboard";
+import Dashboard from "@/components/dashboard/dashboard-shell";
 import serverCatalog from "@/config/server-catalog.json";
 import type { ServerCatalog } from "@/lib/types";
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { errorResponse, unauthorized } from "@/lib/api-response";
 import {
   readAdminConfiguration,
   writeAdminConfiguration,
@@ -10,21 +11,18 @@ import { rcon } from "@/lib/rcon";
 
 export async function GET() {
   if (!(await isAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return unauthorized();
   }
   try {
     return NextResponse.json(await readAdminConfiguration());
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
-      { status: 502 },
-    );
+    return errorResponse(error, 502);
   }
 }
 
 export async function PUT(request: Request) {
   if (!(await isAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return unauthorized();
   }
   try {
     const before = await readAdminConfiguration();

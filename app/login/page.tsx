@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn, Radio } from "lucide-react";
+import { apiRequest } from "@/lib/api-client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,14 +12,16 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     const body = Object.fromEntries(new FormData(event.currentTarget));
-    const response = await fetch("/api/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (response.ok) router.push("/");
-    else {
-      setError("用户名或密码错误");
+    setError("");
+    try {
+      await apiRequest<{ ok: true }>("/api/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      router.push("/");
+    } catch {
+      setError("登录失败，请检查用户名、密码和网络连接");
       setLoading(false);
     }
   }

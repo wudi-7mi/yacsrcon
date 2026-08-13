@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { unauthorized } from "@/lib/api-response";
 import { login } from "@/lib/auth";
+
 export async function POST(request: Request) {
   const { username, password } = await request.json();
   const forwardedProtocol = request.headers
@@ -10,7 +12,7 @@ export async function POST(request: Request) {
     ? forwardedProtocol === "https"
     : new URL(request.url).protocol === "https:";
   if (!(await login(String(username ?? ""), String(password ?? ""), secure))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return unauthorized();
   }
   return NextResponse.json({ ok: true });
 }
