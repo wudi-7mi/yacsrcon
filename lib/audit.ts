@@ -19,7 +19,7 @@ export function redactAuditDetail(detail: Record<string, unknown>) {
 }
 
 export async function audit(action: string, detail: Record<string, unknown>) {
-  const file = path.resolve(config.DATABASE_PATH.replace(/\.db$/, ".jsonl"));
+  const file = config.AUDIT_PATH;
   try {
     await mkdir(path.dirname(file), { recursive: true, mode: 0o700 });
     await appendFile(
@@ -36,7 +36,7 @@ export async function audit(action: string, detail: Record<string, unknown>) {
 }
 
 export async function recentAudit(limit = 40) {
-  const file = path.resolve(config.DATABASE_PATH.replace(/\.db$/, ".jsonl"));
+  const file = config.AUDIT_PATH;
   try {
     const text = await (
       await import("node:fs/promises")

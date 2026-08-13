@@ -18,11 +18,6 @@ type SessionRecord = {
 type SessionFile = { sessions: Record<string, SessionRecord> };
 let mutationQueue: Promise<void> = Promise.resolve();
 
-function sessionFile() {
-  const database = path.resolve(config.DATABASE_PATH);
-  return database.replace(/\.db$/, ".sessions.json");
-}
-
 function tokenHash(token: string) {
   return crypto
     .createHmac("sha256", config.AUTH_SECRET)
@@ -39,7 +34,7 @@ function credentialHash() {
 
 async function readSessions(): Promise<SessionFile> {
   try {
-    const parsed = JSON.parse(await readFile(sessionFile(), "utf8"));
+    const parsed = JSON.parse(await readFile(config.SESSION_PATH, "utf8"));
     if (!parsed?.sessions || typeof parsed.sessions !== "object") {
       return { sessions: {} };
     }
@@ -58,7 +53,7 @@ async function readSessions(): Promise<SessionFile> {
 }
 
 async function writeSessions(value: SessionFile) {
-  const file = sessionFile();
+  const file = config.SESSION_PATH;
   const directory = path.dirname(file);
   const temporary = `${file}.${process.pid}.${crypto.randomBytes(8).toString("hex")}.tmp`;
   await mkdir(directory, { recursive: true, mode: 0o700 });

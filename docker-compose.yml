@@ -7,5 +7,9 @@ services:
       - .env.local
     environment:
       DATABASE_PATH: /app/data/yacsrcon.db
+      SESSION_PATH: /app/data/yacsrcon.sessions.json
+      AUDIT_PATH: /app/data/yacsrcon.jsonl
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
     volumes:
       - ./data:/app/data
