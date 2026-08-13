@@ -49,7 +49,8 @@ docker compose up -d --build
 The container uses host networking so it can reach a CS2 RCON socket bound to
 `127.0.1.1`. Session and audit data are persisted in the project's `data/`
 directory. The entrypoint initializes that directory and then drops privileges;
-set `PUID` and `PGID` to the owner of the host directory when they are not 1000.
+set `PUID` and `PGID` in `.env.local` to the owner of the host directory when
+they are not 1000. When omitted, the entrypoint defaults both values to 1000.
 
 `SESSION_PATH` and `AUDIT_PATH` may be configured explicitly. Otherwise they
 are derived beside `DATABASE_PATH` using its filename stem, regardless of its
