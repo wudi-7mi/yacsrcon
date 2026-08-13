@@ -13,6 +13,7 @@ import {
   Menu,
   RefreshCw,
   Server,
+  ServerCog,
   ShieldCheck,
   Terminal,
   Users,
@@ -24,6 +25,7 @@ import {
   MapsView,
   OverviewView,
   PlayersView,
+  ServerOperationsView,
 } from "@/components/dashboard/views";
 import type { DashboardTab } from "@/components/dashboard/types";
 import { SessionExpiredDialog } from "@/components/dashboard/session-expired-dialog";
@@ -114,6 +116,7 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
     { id: "maps", label: "地图与模式", icon: Map },
     { id: "admins", label: "管理员与权限", icon: ShieldCheck },
     { id: "audit", label: "操作审计", icon: FileClock },
+    { id: "operations", label: "服务器运维", icon: ServerCog },
     { id: "console", label: "RCON 控制台", icon: Terminal },
   ] as const;
   return (
@@ -225,6 +228,9 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
           )}{" "}
           {tab === "audit" && (
             <AuditView onUnauthorized={handleUnauthorized} />
+          )}{" "}
+          {tab === "operations" && (
+            <ServerOperationsView onUnauthorized={handleUnauthorized} />
           )}{" "}
           {tab === "console" && (
             <ConsoleView

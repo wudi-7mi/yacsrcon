@@ -4,4 +4,5 @@ export type DashboardTab =
   | "maps"
   | "admins"
   | "audit"
+  | "operations"
   | "console";

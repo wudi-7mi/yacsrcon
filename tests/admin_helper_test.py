@@ -90,6 +90,42 @@ class AdminHelperTransactionTest(unittest.TestCase):
             )
             self.assertEqual(os.stat(database_path).st_mtime_ns, before)
 
+    def test_parses_only_supported_server_environment_keys(self):
+        helper = load_helper()
+        with tempfile.TemporaryDirectory() as directory:
+            helper.CS2_ENV_FILE = os.path.join(directory, ".env")
+            with open(helper.CS2_ENV_FILE, "w", encoding="utf-8") as handle:
+                handle.write(
+                    "PORT=27015\nTICKRATE=64\nMAXPLAYERS=16\nAPI_KEY=key\n"
+                    "RCON_PASSWORD=password\nSTEAM_ACCOUNT=token\nLAN=0\nEXEC=on_boot.cfg\n"
+                )
+            self.assertEqual(helper.read_server_environment()["PORT"], "27015")
+            with open(helper.CS2_ENV_FILE, "a", encoding="utf-8") as handle:
+                handle.write("PATH=/tmp\n")
+            with self.assertRaises(SystemExit):
+                helper.read_server_environment()
+
+    def test_redacts_secrets_from_server_logs(self):
+        helper = load_helper()
+        line = "cs2 -authkey api-value +sv_setsteamaccount token-value +rcon_password secret"
+        redacted = helper.redact_log_line(line)
+        self.assertNotIn("api-value", redacted)
+        self.assertNotIn("token-value", redacted)
+        self.assertNotIn("secret", redacted)
+        self.assertIn("[REDACTED]", redacted)
+
+    def test_refuses_symlinked_server_logs(self):
+        helper = load_helper()
+        with tempfile.TemporaryDirectory() as directory:
+            target = os.path.join(directory, "target")
+            link = os.path.join(directory, "server.log")
+            with open(target, "w", encoding="utf-8") as handle:
+                handle.write("root-only-value\n")
+            os.symlink(target, link)
+            helper.CS2_LOG_FILE = link
+            with self.assertRaises(OSError):
+                helper.read_server_logs()
+
 
 if __name__ == "__main__":
     unittest.main()

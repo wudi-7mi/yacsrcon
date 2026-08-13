@@ -93,3 +93,16 @@ export type AuditResult = {
   entries: AuditEntry[];
   malformed: number;
 };
+
+export type ServerProcessStatus = {
+  running: boolean;
+  pid: number | null;
+  startedAt: string | null;
+  uptimeSeconds: number | null;
+  management: "fixed-script";
+};
+
+export type ServerLogResult = {
+  status: ServerProcessStatus;
+  lines: string[];
+};

@@ -63,7 +63,15 @@ export const adminConfigurationSchema = z
   });
 
 export async function runAdminHelper(
-  action: "read" | "apply" | "bans",
+  action:
+    | "read"
+    | "apply"
+    | "bans"
+    | "server-status"
+    | "server-logs"
+    | "server-start"
+    | "server-stop"
+    | "server-restart",
   input?: string,
 ) {
   return new Promise<{ stdout: string }>((resolve, reject) => {
@@ -72,7 +80,8 @@ export async function runAdminHelper(
     });
     let stdout = "";
     let stderr = "";
-    const timer = setTimeout(() => child.kill("SIGKILL"), 5000);
+    const timeoutMs = action.startsWith("server-") ? 25_000 : 5_000;
+    const timer = setTimeout(() => child.kill("SIGKILL"), timeoutMs);
     child.stdout.setEncoding("utf8");
     child.stderr.setEncoding("utf8");
     child.stdout.on("data", (chunk) => {

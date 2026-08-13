@@ -38,7 +38,7 @@ helper and its sudoers rule so newly added restricted actions, such as ban-list
 access, are available to the updated application.
 
 The installer creates a root-owned `/usr/local/sbin/yacsrcon-admin-helper` and
-a sudoers rule limited to its `read`, `apply`, and `bans` actions. The helper
+a sudoers rule limited to fixed configuration, ban-list, and CS2 process actions. The helper
 only accesses `admins.json`, `admin_groups.json`, and `admin_overrides.json` in
 the fixed CounterStrikeSharp config directory, plus read-only access to
 SimpleAdmin's fixed `bans.db` path. Every administrator configuration apply
@@ -46,6 +46,12 @@ validates the complete document, writes through same-directory temporary
 files, and stores the previous files under `configs/backups/yacsrcon/`. Ban and
 unban writes always use SimpleAdmin RCON commands; the helper never writes its
 SQLite database.
+
+The server operations page is tied to the reference host deployment under
+`/home/wudi7mi/cs2-env` and `/home/steam/cs2`. The helper starts only the fixed
+CS2 binary, stops only a verified `steam`-owned CS2 process, and returns only
+the tail of the fixed `server.log` after redacting launch secrets. Re-run the
+helper installer after this upgrade before opening that page.
 
 The audit center reads up to 200 recent matching records and skips malformed
 JSONL lines without hiding valid entries. The active audit file rotates at 5
