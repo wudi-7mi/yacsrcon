@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 import datetime
 from collections import deque
+from contextlib import contextmanager
+import fcntl
 import json
 import os
 import re
@@ -33,10 +35,12 @@ CS2_RUNTIME = "/home/steam/steamrt/run"
 CS2_BINARY = os.path.join(CS2_DIRECTORY, "game/bin/linuxsteamrt64/cs2")
 STEAM_USER = "steam"
 RUNUSER = "/usr/sbin/runuser"
+SERVER_LOCK_FILE = "/run/yacsrcon-cs2-server.lock"
 ENV_KEYS = {
     "API_KEY", "IP", "PORT", "TICKRATE", "MAXPLAYERS", "RCON_PASSWORD",
     "STEAM_ACCOUNT", "SERVER_PASSWORD", "LAN", "EXEC",
 }
+IGNORED_ENV_KEYS = {"CUSTOM_FOLDER", "DUCK_DOMAIN", "DUCK_TOKEN"}
 REQUIRED_ENV = {
     "PORT", "TICKRATE", "MAXPLAYERS", "API_KEY", "RCON_PASSWORD", "STEAM_ACCOUNT", "LAN", "EXEC",
 }
@@ -165,6 +169,7 @@ def read_bans():
 
 def read_server_environment():
     values = {}
+    seen = set()
     descriptor = os.open(CS2_ENV_FILE, os.O_RDONLY | os.O_NOFOLLOW)
     if not stat.S_ISREG(os.fstat(descriptor).st_mode):
         os.close(descriptor)
@@ -178,13 +183,16 @@ def read_server_environment():
                 fail(f"CS2 环境配置第 {number} 行无效")
             key, value = line.split("=", 1)
             key = key.strip()
-            if key not in ENV_KEYS or key in values:
+            if key not in ENV_KEYS | IGNORED_ENV_KEYS or key in seen:
                 fail(f"CS2 环境配置项不受支持：{key}")
+            seen.add(key)
             value = value.strip()
             if (len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'"):
                 value = value[1:-1]
             if "\x00" in value or "\n" in value or "\r" in value:
                 fail(f"CS2 环境配置项无效：{key}")
+            if key in IGNORED_ENV_KEYS:
+                continue
             values[key] = value
     missing = sorted(key for key in REQUIRED_ENV if not values.get(key))
     if missing:
@@ -337,6 +345,40 @@ def stop_server(timeout=15):
     fail("CS2 服务器未在超时时间内停止")
 
 
+@contextmanager
+def server_operation_lock():
+    descriptor = os.open(
+        SERVER_LOCK_FILE,
+        os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC,
+        0o600,
+    )
+    try:
+        lock = os.fstat(descriptor)
+        if not stat.S_ISREG(lock.st_mode) or lock.st_uid != os.geteuid():
+            fail("CS2 操作锁文件不安全")
+        os.fchmod(descriptor, 0o600)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            fail("已有 CS2 服务器操作正在进行")
+        yield
+    finally:
+        os.close(descriptor)
+
+
+def control_server(action):
+    with server_operation_lock():
+        if action == "server-start":
+            return start_server()
+        if action == "server-stop":
+            return stop_server()
+        if action == "server-restart":
+            if find_cs2_process() is not None:
+                stop_server()
+            return start_server()
+        fail("不支持的服务器操作")
+
+
 def stage_json(filename, value):
     target = os.path.join(CONFIG_DIR, filename)
     owner = os.stat(target)
@@ -425,14 +467,8 @@ def main():
         print(json.dumps(server_status(), ensure_ascii=False))
     elif sys.argv[1] == "server-logs":
         print(json.dumps({"status": server_status(), "lines": read_server_logs()}, ensure_ascii=False))
-    elif sys.argv[1] == "server-start":
-        print(json.dumps(start_server(), ensure_ascii=False))
-    elif sys.argv[1] == "server-stop":
-        print(json.dumps(stop_server(), ensure_ascii=False))
-    elif sys.argv[1] == "server-restart":
-        if find_cs2_process() is not None:
-            stop_server()
-        print(json.dumps(start_server(), ensure_ascii=False))
+    elif sys.argv[1] in ("server-start", "server-stop", "server-restart"):
+        print(json.dumps(control_server(sys.argv[1]), ensure_ascii=False))
     else:
         raw = sys.stdin.buffer.read(1024 * 1024 + 1)
         if len(raw) > 1024 * 1024:

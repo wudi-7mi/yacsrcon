@@ -3,7 +3,10 @@ from importlib.machinery import SourceFileLoader
 import json
 import os
 import sqlite3
+import subprocess
+import sys
 import tempfile
+import time
 import unittest
 from unittest import mock
 
@@ -98,8 +101,14 @@ class AdminHelperTransactionTest(unittest.TestCase):
                 handle.write(
                     "PORT=27015\nTICKRATE=64\nMAXPLAYERS=16\nAPI_KEY=key\n"
                     "RCON_PASSWORD=password\nSTEAM_ACCOUNT=token\nLAN=0\nEXEC=on_boot.cfg\n"
+                    "CUSTOM_FOLDER=/home/steam/cs2/custom_files\n"
+                    "DUCK_DOMAIN=example.duckdns.org\nDUCK_TOKEN=duck-token\n"
                 )
-            self.assertEqual(helper.read_server_environment()["PORT"], "27015")
+            values = helper.read_server_environment()
+            self.assertEqual(values["PORT"], "27015")
+            self.assertNotIn("CUSTOM_FOLDER", values)
+            self.assertNotIn("DUCK_DOMAIN", values)
+            self.assertNotIn("DUCK_TOKEN", values)
             with open(helper.CS2_ENV_FILE, "a", encoding="utf-8") as handle:
                 handle.write("PATH=/tmp\n")
             with self.assertRaises(SystemExit):
@@ -125,6 +134,36 @@ class AdminHelperTransactionTest(unittest.TestCase):
             helper.CS2_LOG_FILE = link
             with self.assertRaises(OSError):
                 helper.read_server_logs()
+
+    def test_serializes_server_operations_across_processes(self):
+        helper = load_helper()
+        self.assertEqual(helper.SERVER_LOCK_FILE, "/run/yacsrcon-cs2-server.lock")
+        with tempfile.TemporaryDirectory() as directory:
+            lock_path = os.path.join(directory, "server.lock")
+            helper.SERVER_LOCK_FILE = lock_path
+            holder = subprocess.Popen(
+                [
+                    sys.executable,
+                    "-c",
+                    "import fcntl, os, sys, time; "
+                    "fd=os.open(sys.argv[1], os.O_RDWR|os.O_CREAT, 0o600); "
+                    "fcntl.flock(fd, fcntl.LOCK_EX); print('locked', flush=True); "
+                    "time.sleep(0.4)",
+                    lock_path,
+                ],
+                stdout=subprocess.PIPE,
+                text=True,
+            )
+            try:
+                self.assertEqual(holder.stdout.readline().strip(), "locked")
+                started = time.monotonic()
+                with self.assertRaises(SystemExit):
+                    with helper.server_operation_lock():
+                        self.fail("competing process acquired the server lock")
+                self.assertLess(time.monotonic() - started, 0.2)
+            finally:
+                holder.wait(timeout=2)
+                holder.stdout.close()
 
 
 if __name__ == "__main__":
