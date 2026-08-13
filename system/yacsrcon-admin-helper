@@ -103,7 +103,7 @@ def read_config():
     return validate(result)
 
 
-def atomic_write(filename, value):
+def stage_json(filename, value):
     target = os.path.join(CONFIG_DIR, filename)
     owner = os.stat(target)
     descriptor, temporary = tempfile.mkstemp(prefix=f".{filename}.yacsrcon-", dir=CONFIG_DIR)
@@ -115,10 +115,32 @@ def atomic_write(filename, value):
             os.fsync(handle.fileno())
         os.chown(temporary, owner.st_uid, owner.st_gid)
         os.chmod(temporary, 0o640)
-        os.replace(temporary, target)
-    finally:
+        return temporary
+    except Exception:
         if os.path.exists(temporary):
             os.unlink(temporary)
+        raise
+
+
+def restore_backup(backup):
+    failures = []
+    for filename in FILES.values():
+        target = os.path.join(CONFIG_DIR, filename)
+        owner = os.stat(target)
+        descriptor, temporary = tempfile.mkstemp(prefix=f".{filename}.rollback-", dir=CONFIG_DIR)
+        os.close(descriptor)
+        try:
+            shutil.copyfile(os.path.join(backup, filename), temporary)
+            os.chown(temporary, owner.st_uid, owner.st_gid)
+            os.chmod(temporary, 0o640)
+            os.replace(temporary, target)
+        except Exception as error:
+            failures.append(f"{filename}: {error}")
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+    if failures:
+        raise RuntimeError("回滚不完整：" + "; ".join(failures))
 
 
 def apply_config(data):
@@ -134,23 +156,45 @@ def apply_config(data):
         shutil.copy2(source, destination)
         os.chown(destination, owner.st_uid, owner.st_gid)
         os.chmod(destination, 0o640)
-    for key, filename in FILES.items():
-        atomic_write(filename, data[key])
+    staged = {}
+    try:
+        for key, filename in FILES.items():
+            staged[filename] = stage_json(filename, data[key])
+        for filename in FILES.values():
+            os.replace(staged[filename], os.path.join(CONFIG_DIR, filename))
+            staged.pop(filename)
+    except Exception as write_error:
+        try:
+            restore_backup(backup)
+        except Exception as rollback_error:
+            raise RuntimeError(
+                f"写入失败且自动回滚失败：{write_error}; {rollback_error}; 备份位于 {backup}"
+            ) from rollback_error
+        raise RuntimeError(f"写入失败，已恢复全部配置：{write_error}") from write_error
+    finally:
+        for temporary in staged.values():
+            if os.path.exists(temporary):
+                os.unlink(temporary)
     return backup
 
 
-if len(sys.argv) != 2 or sys.argv[1] not in ("read", "apply"):
-    fail("用法：yacsrcon-admin-helper read|apply")
+def main():
+    if len(sys.argv) != 2 or sys.argv[1] not in ("read", "apply"):
+        fail("用法：yacsrcon-admin-helper read|apply")
 
-if sys.argv[1] == "read":
-    print(json.dumps(read_config(), ensure_ascii=False))
-else:
-    raw = sys.stdin.buffer.read(1024 * 1024 + 1)
-    if len(raw) > 1024 * 1024:
-        fail("输入超过 1 MiB 限制")
-    try:
-        value = validate(json.loads(raw))
-    except (json.JSONDecodeError, UnicodeDecodeError) as error:
-        fail(str(error))
-    backup_directory = apply_config(value)
-    print(json.dumps({"backupDirectory": backup_directory}))
+    if sys.argv[1] == "read":
+        print(json.dumps(read_config(), ensure_ascii=False))
+    else:
+        raw = sys.stdin.buffer.read(1024 * 1024 + 1)
+        if len(raw) > 1024 * 1024:
+            fail("输入超过 1 MiB 限制")
+        try:
+            value = validate(json.loads(raw))
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            fail(str(error))
+        backup_directory = apply_config(value)
+        print(json.dumps({"backupDirectory": backup_directory}))
+
+
+if __name__ == "__main__":
+    main()

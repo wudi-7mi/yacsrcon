@@ -8,7 +8,7 @@
     "start": "next start --port 21590",
     "sync:catalog": "node scripts/sync-server-catalog.mjs",
     "lint": "eslint .",
-    "test": "node --test --experimental-strip-types tests/*.test.ts"
+    "test": "node --test --experimental-strip-types tests/*.test.ts && python3 -m unittest discover -s tests -p '*_test.py'"
   },
   "dependencies": {
     "@node-steam/vdf": "^2.2.0",

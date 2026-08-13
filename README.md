@@ -13,6 +13,8 @@ npm run dev
 
 Open http://localhost:21590. The app keeps the RCON secret server-side, maintains a reconnecting session, and writes an audit trail to `data/yacsrcon.jsonl`.
 
+RCON authentication and commands have an explicit 4-second deadline by default. Set `RCON_TIMEOUT_MS` when a remote server needs a different value. A timeout disconnects the stale socket so later commands can reconnect; because the server might have received a timed-out command, the UI reports its outcome as unknown rather than encouraging an unsafe retry.
+
 ## Sync maps and modes
 
 The checked-in `config/server-catalog.json` snapshot is generated from GameModeManager and `gamemodes_server.txt`, so the web process does not need access to the Steam user's files. After changing either server config, refresh the snapshot with:

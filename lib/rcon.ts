@@ -1,29 +1,83 @@
 import Rcon from "rcon-srcds";
-import { config } from "./config";
-import { audit } from "./audit";
-import { parsePlayers, parsePlugins, parseStatus } from "./parse";
-import type { DashboardData } from "./types";
+import { config } from "./config.ts";
+import { audit } from "./audit.ts";
+import { parsePlayers, parsePlugins, parseStatus } from "./parse.ts";
+import type { DashboardData } from "./types.ts";
+import { withTimeout } from "./timeout.ts";
 
-class RconService {
-  private client: Rcon | null = null;
-  private connecting: Promise<Rcon> | null = null;
+type RconClient = {
+  authenticate(password: string): Promise<boolean>;
+  execute(command: string): Promise<string | boolean>;
+  isConnected(): boolean;
+  isAuthenticated(): boolean;
+  connected: boolean;
+  authenticated: boolean;
+  connection?: { destroy(): void };
+};
+
+type RconServiceOptions = {
+  createClient?: () => RconClient;
+  timeoutMs?: number;
+  auditEvent?: typeof audit;
+};
+
+export class RconService {
+  private client: RconClient | null = null;
+  private connecting: Promise<RconClient> | null = null;
   private commandQueue: Promise<void> = Promise.resolve();
+  private readonly createClient: () => RconClient;
+  private readonly timeoutMs: number;
+  private readonly auditEvent: typeof audit;
+
+  constructor(options: RconServiceOptions = {}) {
+    this.timeoutMs = options.timeoutMs ?? config.RCON_TIMEOUT_MS;
+    this.auditEvent = options.auditEvent ?? audit;
+    this.createClient =
+      options.createClient ??
+      (() =>
+        new Rcon({
+          host: config.RCON_HOST,
+          port: config.RCON_PORT,
+          encoding: "utf8",
+          timeout: this.timeoutMs,
+        }));
+  }
+
+  private discardClient(client: RconClient) {
+    if (this.client === client) this.client = null;
+    client.authenticated = false;
+    client.connected = false;
+    client.connection?.destroy();
+  }
+
+  private async recordAudit(action: string, detail: Record<string, unknown>) {
+    try {
+      await this.auditEvent(action, detail);
+    } catch (error) {
+      console.error("Audit callback failed:", error);
+    }
+  }
 
   private async getClient() {
     if (this.client?.isConnected() && this.client.isAuthenticated())
       return this.client;
     if (this.connecting) return this.connecting;
     this.connecting = (async () => {
-      const client = new Rcon({
-        host: config.RCON_HOST,
-        port: config.RCON_PORT,
-        encoding: "utf8",
-        timeout: 2500,
-      });
-      const authenticated = await client.authenticate(config.RCON_PASSWORD);
-      if (!authenticated) throw new Error("RCON authentication failed");
-      this.client = client;
-      return client;
+      const client = this.createClient();
+      try {
+        const authenticated = await withTimeout(
+          client.authenticate(config.RCON_PASSWORD),
+          this.timeoutMs,
+          "RCON authentication",
+          () => this.discardClient(client),
+        );
+        if (!authenticated) throw new Error("RCON authentication failed");
+        this.client = client;
+        return client;
+      } catch (error) {
+        this.discardClient(client);
+        throw error;
+      }
     })();
     try {
       return await this.connecting;
@@ -36,17 +90,22 @@ class RconService {
     const client = await this.getClient();
     const started = Date.now();
     try {
-      const result = await client.execute(command);
+      const result = await withTimeout(
+        client.execute(command),
+        this.timeoutMs,
+        `RCON command ${command.split(/\s+/, 1)[0]}`,
+        () => this.discardClient(client),
+      );
       const response = typeof result === "string" ? result : "";
-      await audit("command", {
+      void this.recordAudit("command", {
         command,
         response: response.slice(0, 2000),
         latencyMs: Date.now() - started,
       });
       return response;
     } catch (error) {
-      this.client = null;
-      await audit("command_error", {
+      this.discardClient(client);
+      void this.recordAudit("command_error", {
         command,
         error: error instanceof Error ? error.message : String(error),
       });
