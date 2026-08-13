@@ -21,8 +21,11 @@ function confirmationPayload(error: unknown) {
   );
 }
 
-export function useRconConsole(onExecuted: () => void | Promise<void>) {
-  const request = useApiRequest();
+export function useRconConsole(
+  onExecuted: () => void | Promise<void>,
+  onUnauthorized?: () => void,
+) {
+  const request = useApiRequest(onUnauthorized);
   const [command, setCommand] = useState("");
   const [output, setOutput] = useState("$ 已连接到 RCON\n");
   const [confirmCommand, setConfirmCommand] = useState<string | null>(null);
@@ -45,6 +48,7 @@ export function useRconConsole(onExecuted: () => void | Promise<void>) {
           setConfirmCommand(cmd);
           return;
         }
+        if (error instanceof ApiError && error.status === 401) return;
         setOutput(
           (old) =>
             `${old}\n$ ${cmd}\n${error instanceof Error ? error.message : String(error)}`,

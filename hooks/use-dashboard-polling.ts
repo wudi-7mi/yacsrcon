@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useApiRequest } from "@/hooks/use-api-request";
+import { ApiError } from "@/lib/api-client";
 import type { DashboardData } from "@/lib/types";
 
 const initialDashboard: DashboardData = {
@@ -13,8 +14,16 @@ const initialDashboard: DashboardData = {
   meta: "",
 };
 
-export function useDashboardPolling(intervalMs = 15_000) {
-  const request = useApiRequest();
+export function useDashboardPolling({
+  enabled = true,
+  intervalMs = 15_000,
+  onUnauthorized,
+}: {
+  enabled?: boolean;
+  intervalMs?: number;
+  onUnauthorized?: () => void;
+} = {}) {
+  const request = useApiRequest(onUnauthorized);
   const [data, setData] = useState(initialDashboard);
   const [loading, setLoading] = useState(true);
 
@@ -28,6 +37,7 @@ export function useDashboardPolling(intervalMs = 15_000) {
         }),
       );
     } catch (error) {
+      if (error instanceof ApiError && error.status === 401) return;
       if (!(error instanceof DOMException && error.name === "AbortError")) {
         setData((current) => ({
           ...current,
@@ -41,6 +51,7 @@ export function useDashboardPolling(intervalMs = 15_000) {
   }, [request]);
 
   useEffect(() => {
+    if (!enabled) return;
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let controller: AbortController | undefined;
@@ -55,7 +66,7 @@ export function useDashboardPolling(intervalMs = 15_000) {
       controller?.abort();
       if (timer) clearTimeout(timer);
     };
-  }, [intervalMs, refresh]);
+  }, [enabled, intervalMs, refresh]);
 
   return { data, loading, refresh };
 }

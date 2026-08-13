@@ -25,6 +25,7 @@ import {
   updateGroup,
 } from "@/lib/admin-editor";
 import { useApiRequest } from "@/hooks/use-api-request";
+import { ApiError } from "@/lib/api-client";
 import type {
   AdminConfiguration,
   Player,
@@ -40,11 +41,15 @@ const emptyConfig: AdminConfiguration = {
 export default function AdminManager({
   players,
   onDirtyChange,
+  onDraftChange,
+  onUnauthorized,
 }: {
   players: Player[];
   onDirtyChange?: (dirty: boolean) => void;
+  onDraftChange?: (draft: AdminConfiguration | null) => void;
+  onUnauthorized?: () => void;
 }) {
-  const request = useApiRequest();
+  const request = useApiRequest(onUnauthorized);
   const [config, setConfig] = useState<AdminConfiguration>(emptyConfig);
   const [baseline, setBaseline] = useState("");
   const [loading, setLoading] = useState(true);
@@ -66,6 +71,7 @@ export default function AdminManager({
       setConfig(body);
       setBaseline(JSON.stringify(body));
     } catch (error) {
+      if (error instanceof ApiError && error.status === 401) return;
       setNotice({
         tone: "error",
         text: error instanceof Error ? error.message : String(error),
@@ -90,6 +96,11 @@ export default function AdminManager({
     onDirtyChange?.(dirty);
     return () => onDirtyChange?.(false);
   }, [dirty, onDirtyChange]);
+
+  useEffect(() => {
+    onDraftChange?.(dirty ? config : null);
+    return () => onDraftChange?.(null);
+  }, [config, dirty, onDraftChange]);
 
   useEffect(() => {
     if (!dirty) return;
@@ -120,6 +131,7 @@ export default function AdminManager({
       });
     } catch (error) {
       setConfirmSave(false);
+      if (error instanceof ApiError && error.status === 401) return;
       setNotice({
         tone: "error",
         text: error instanceof Error ? error.message : String(error),

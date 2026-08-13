@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Activity,
@@ -24,24 +24,63 @@ import {
   PlayersView,
 } from "@/components/dashboard/views";
 import type { DashboardTab } from "@/components/dashboard/types";
+import { SessionExpiredDialog } from "@/components/dashboard/session-expired-dialog";
 import { useDashboardPolling } from "@/hooks/use-dashboard-polling";
 import { useRconConsole } from "@/hooks/use-rcon-console";
 import { useApiRequest } from "@/hooks/use-api-request";
+import { ApiError, apiRequest } from "@/lib/api-client";
 import { QUICK_COMMANDS } from "@/lib/parse";
-import type { ServerCatalog } from "@/lib/types";
+import type { AdminConfiguration, ServerCatalog } from "@/lib/types";
 
 export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
   const router = useRouter();
-  const request = useApiRequest();
-  const { data, loading, refresh } = useDashboardPolling();
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const handleUnauthorized = useCallback(() => setSessionExpired(true), []);
+  const request = useApiRequest(handleUnauthorized);
+  const { data, loading, refresh } = useDashboardPolling({
+    enabled: !sessionExpired,
+    onUnauthorized: handleUnauthorized,
+  });
   const refreshAfterCommand = useCallback(() => refresh(), [refresh]);
-  const consoleSession = useRconConsole(refreshAfterCommand);
+  const consoleSession = useRconConsole(
+    refreshAfterCommand,
+    handleUnauthorized,
+  );
   const [tab, setTab] = useState<DashboardTab>("overview");
   const [mobileNav, setMobileNav] = useState(false);
   const [adminDirty, setAdminDirty] = useState(false);
+  const [adminDraft, setAdminDraft] = useState<AdminConfiguration | null>(null);
   const [pendingDestination, setPendingDestination] = useState<
     DashboardTab | "logout" | null
   >(null);
+
+  useEffect(() => {
+    if (sessionExpired && !adminDirty) router.replace("/login");
+  }, [adminDirty, router, sessionExpired]);
+
+  const serializedDraft = useMemo(
+    () => (adminDraft ? JSON.stringify(adminDraft, null, 2) : ""),
+    [adminDraft],
+  );
+
+  async function reauthenticate(username: string, password: string) {
+    try {
+      await apiRequest<{ ok: true }>("/api/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        throw new Error("用户名或密码错误，请重试。");
+      }
+      throw new Error(
+        error instanceof Error ? error.message : "登录请求失败，请重试。",
+      );
+    }
+    setSessionExpired(false);
+    await refresh();
+  }
 
   function selectTab(next: DashboardTab) {
     if (tab === "admins" && adminDirty && next !== "admins") {
@@ -173,6 +212,8 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
             <AdminManager
               players={data.players}
               onDirtyChange={setAdminDirty}
+              onDraftChange={setAdminDraft}
+              onUnauthorized={handleUnauthorized}
             />
           )}{" "}
           {tab === "console" && (
@@ -282,6 +323,13 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
             </div>
           </div>
         </div>
+      )}
+      {sessionExpired && adminDirty && serializedDraft && (
+        <SessionExpiredDialog
+          draft={serializedDraft}
+          onDiscard={() => router.replace("/login")}
+          onReauthenticate={reauthenticate}
+        />
       )}
     </div>
   );
