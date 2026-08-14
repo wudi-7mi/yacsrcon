@@ -1,0 +1,18 @@
+{
+  "agents": {
+    "2": { "def": 5105, "uid": 101 },
+    "3": { "def": 5036, "uid": 102 }
+  },
+  "collectible": { "def": 874, "uid": 103 },
+  "ctWeapons": {
+    "7": { "def": 7, "paint": 180, "seed": 12, "wear": 0.12, "stattrak": 42, "uid": 104 },
+    "16": { "def": 16, "paint": 309, "uid": 105 }
+  },
+  "gloves": {},
+  "graffiti": null,
+  "knives": {
+    "2": { "def": 500, "paint": 38, "uid": 106 }
+  },
+  "musicKit": { "def": 1314, "musicId": 3, "uid": 107 },
+  "tWeapons": {}
+}

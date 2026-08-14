@@ -147,3 +147,24 @@ directory.
 - 24-hour server health history with short-term trends and in-app alerts
 - Webhook alerts with sustained thresholds, recovery notifications, and cooldowns
 - Health checks, storage usage, bounded CFG backups, and logical recovery packages
+
+## Next plugin phase
+
+The next phase continues with plugin-specific workflows rather than general
+security or infrastructure work:
+
+1. Integrate Map Configurator with structured map, prefix, and forced-round CFG
+   rules. Keep its editor limited to the plugin's fixed configuration files and
+   reuse the existing diff, backup, and rollback experience.
+2. Enable and evaluate MatchZy on the reference server, then connect match
+   setup, team assignment, veto state, demos, and results to its supported API
+   or Get5-compatible panel. External panels should open separately instead of
+   being embedded.
+3. Enable and evaluate SharpTimer, starting with read-only leaderboards,
+   personal records, map records, and run details before adding moderation or
+   zone-management actions.
+4. Add optional Inventory Simulator API-key support for short-lived player
+   sign-in links. The public inventory and equipped views remain available when
+   no API key is configured.
+5. Survey the remaining loaded plugins for stable APIs or structured data, with
+   DiscordChatSync and gameplay-statistics plugins as the next candidates.

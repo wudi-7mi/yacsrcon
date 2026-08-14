@@ -1,5 +1,5 @@
 import "server-only";
-import { normalizeInventoryItems } from "./inventory-normalize.ts";
+import { normalizeEquippedV5, normalizeInventoryItems } from "./inventory-normalize.ts";
 import type { InventorySimulatorResult } from "./types.ts";
 
 export const INVENTORY_SERVICE_URL = "https://inventory.cstrike.app";
@@ -29,7 +29,7 @@ export async function readPlayerInventory(steamId: string): Promise<InventorySim
     fetchJson(`/api/equipped/v5/${steamId}.json`),
   ]);
   const inventory = normalizeInventoryItems(inventoryPayload);
-  const equipped = normalizeInventoryItems(equippedPayload);
+  const equipped = normalizeEquippedV5(equippedPayload);
   return {
     steamId,
     serviceUrl: INVENTORY_SERVICE_URL,
