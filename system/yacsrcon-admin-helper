@@ -6,6 +6,7 @@ import fcntl
 import hashlib
 import json
 import os
+import pwd
 import re
 import shutil
 import signal
@@ -41,6 +42,7 @@ CFG_SOURCE_DIR = "/home/steam/cs2/custom_files/cfg"
 CFG_RUNTIME_DIR = "/home/steam/cs2/game/csgo/cfg"
 CFG_BACKUP_DIR = "/home/steam/cs2/custom_files/backups/yacsrcon-cfg"
 CFG_LOCK_FILE = "/run/yacsrcon-cs2-cfg.lock"
+CFG_BACKUP_LIMIT = 50
 CFG_FILES = {
     "server": {"filename": "server.cfg", "label": "服务器主配置"},
     "boot": {"filename": "on_boot.cfg", "label": "启动后配置"},
@@ -342,7 +344,7 @@ def read_cfg(config_id):
 
 
 def ensure_cfg_directories():
-    steam = __import__("pwd").getpwnam(STEAM_USER)
+    steam = pwd.getpwnam(STEAM_USER)
     if not stat.S_ISDIR(os.lstat(CFG_RUNTIME_DIR).st_mode):
         fail("CFG 运行目录不是普通目录")
     for directory in (CFG_SOURCE_DIR, os.path.dirname(CFG_BACKUP_DIR), CFG_BACKUP_DIR):
@@ -350,7 +352,6 @@ def ensure_cfg_directories():
         metadata = os.lstat(directory)
         if not stat.S_ISDIR(metadata.st_mode):
             fail("CFG 管理目录不是普通目录")
-        os.chown(directory, steam.pw_uid, steam.pw_gid)
         os.chmod(directory, 0o750)
     return steam.pw_uid, steam.pw_gid
 
@@ -359,14 +360,14 @@ def atomic_cfg_write(path, content, uid, gid):
     parent = os.path.dirname(path)
     descriptor, temporary = tempfile.mkstemp(prefix=".yacsrcon-cfg-", dir=parent)
     try:
+        os.fchown(descriptor, uid, gid)
+        os.fchmod(descriptor, 0o640)
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
             handle.write(content)
             if content and not content.endswith("\n"):
                 handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
-        os.chown(temporary, uid, gid)
-        os.chmod(temporary, 0o640)
         if os.path.lexists(path) and not stat.S_ISREG(os.lstat(path).st_mode):
             fail("CFG 目标不是普通文件")
         os.replace(temporary, path)
@@ -375,15 +376,29 @@ def atomic_cfg_write(path, content, uid, gid):
             os.unlink(temporary)
 
 
+def prune_cfg_backups(config_id, keep=CFG_BACKUP_LIMIT):
+    directory = os.path.join(CFG_BACKUP_DIR, config_id)
+    backups = sorted(
+        (
+            filename
+            for filename in os.listdir(directory)
+            if re.fullmatch(r"\d{8}T\d{6}\.\d{6}Z\.cfg", filename)
+        ),
+        reverse=True,
+    )
+    for filename in backups[keep:]:
+        os.unlink(os.path.join(directory, filename))
+
+
 def cfg_backup(config_id, content, uid, gid):
     backup_id = datetime.datetime.now(datetime.UTC).strftime("%Y%m%dT%H%M%S.%fZ")
     directory = os.path.join(CFG_BACKUP_DIR, config_id)
     os.makedirs(directory, mode=0o750, exist_ok=True)
     if not stat.S_ISDIR(os.lstat(directory).st_mode):
         fail("CFG 备份目录不是普通目录")
-    os.chown(directory, uid, gid)
     os.chmod(directory, 0o750)
     atomic_cfg_write(os.path.join(directory, f"{backup_id}.cfg"), content, uid, gid)
+    prune_cfg_backups(config_id)
     return backup_id
 
 
@@ -434,7 +449,7 @@ def cfg_history(config_id):
     if not stat.S_ISDIR(os.lstat(directory).st_mode):
         fail("CFG 备份目录不是普通目录")
     result = []
-    for filename in sorted(os.listdir(directory), reverse=True)[:50]:
+    for filename in sorted(os.listdir(directory), reverse=True)[:CFG_BACKUP_LIMIT]:
         if not re.fullmatch(r"\d{8}T\d{6}\.\d{6}Z\.cfg", filename):
             continue
         path = os.path.join(directory, filename)
@@ -472,17 +487,31 @@ def cfg_operation_lock():
         os.close(descriptor)
 
 
+def drop_to_steam():
+    steam = pwd.getpwnam(STEAM_USER)
+    if os.geteuid() == steam.pw_uid:
+        return
+    if os.geteuid() != 0:
+        fail("CFG 操作必须由 root 或 steam 用户执行")
+    os.setgroups([])
+    os.setgid(steam.pw_gid)
+    os.setuid(steam.pw_uid)
+
+
 def cfg_operation(value):
     require_object(value, "CFG 操作")
     operation = value.get("operation")
     config_id = value.get("id")
     if operation == "list":
+        drop_to_steam()
         return [{key: item[key] for key in ("id", "label", "filename", "hash", "persisted", "modifiedAt")} for item in (read_cfg(key) for key in CFG_FILES)]
     if operation == "read":
+        drop_to_steam()
         return {**read_cfg(config_id), "history": cfg_history(config_id)}
     if operation not in ("write", "restore"):
         fail("CFG 操作不受支持")
     with cfg_operation_lock():
+        drop_to_steam()
         if operation == "write":
             return apply_cfg(config_id, value.get("content"), value.get("expectedHash"))
         return restore_cfg(config_id, value.get("backupId"), value.get("expectedHash"))

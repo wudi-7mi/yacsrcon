@@ -141,16 +141,30 @@ export async function recordMetric(sample: MetricSample) {
 }
 
 export async function collectMetric() {
-  const data = await rcon.dashboard();
-  await recordMetric({
-    at: new Date().toISOString(),
-    connected: data.connected,
-    players: data.status?.players ?? 0,
-    maxPlayers: data.status?.maxPlayers ?? 0,
-    map: data.status?.map ?? null,
-    latencyMs: data.latencyMs,
-    error: data.error,
-  });
+  const at = new Date().toISOString();
+  let sample: MetricSample;
+  try {
+    const { status, latencyMs } = await rcon.probeStatus();
+    sample = {
+      at,
+      connected: true,
+      players: status.players,
+      maxPlayers: status.maxPlayers,
+      map: status.map,
+      latencyMs,
+    };
+  } catch (error) {
+    sample = {
+      at,
+      connected: false,
+      players: 0,
+      maxPlayers: 0,
+      map: null,
+      latencyMs: null,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+  await recordMetric(sample);
 }
 
 export async function readMonitoring(hours = 6): Promise<MonitoringResult> {

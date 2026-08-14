@@ -257,6 +257,37 @@ class AdminHelperTransactionTest(unittest.TestCase):
                 with open(os.path.join(parent, "server.cfg"), encoding="utf-8") as handle:
                     self.assertEqual(handle.read(), "hostname old\n")
 
+    def test_cfg_backup_prunes_versions_beyond_retention_limit(self):
+        helper = load_helper()
+        with tempfile.TemporaryDirectory() as directory:
+            helper.CFG_BACKUP_DIR = directory
+            backup_directory = os.path.join(directory, "server")
+            os.makedirs(backup_directory)
+            for index in range(helper.CFG_BACKUP_LIMIT + 3):
+                filename = f"20260814T0100{index:02d}.000000Z.cfg"
+                with open(os.path.join(backup_directory, filename), "w", encoding="utf-8") as handle:
+                    handle.write(str(index))
+
+            helper.prune_cfg_backups("server")
+
+            backups = os.listdir(backup_directory)
+            self.assertEqual(len(backups), helper.CFG_BACKUP_LIMIT)
+            self.assertNotIn("20260814T010000.000000Z.cfg", backups)
+            self.assertIn("20260814T010052.000000Z.cfg", backups)
+
+    def test_cfg_privilege_drop_removes_root_before_file_operations(self):
+        helper = load_helper()
+        steam = mock.Mock(pw_uid=1234, pw_gid=2345)
+        calls = []
+        with mock.patch.object(helper.pwd, "getpwnam", return_value=steam), \
+             mock.patch.object(helper.os, "geteuid", return_value=0), \
+             mock.patch.object(helper.os, "setgroups", side_effect=lambda groups: calls.append(("groups", groups))), \
+             mock.patch.object(helper.os, "setgid", side_effect=lambda gid: calls.append(("gid", gid))), \
+             mock.patch.object(helper.os, "setuid", side_effect=lambda uid: calls.append(("uid", uid))):
+            helper.drop_to_steam()
+
+        self.assertEqual(calls, [("groups", []), ("gid", 2345), ("uid", 1234)])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -79,3 +79,19 @@ test("internal commands share the queue without writing audit entries", async ()
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.deepEqual(actions, ["command"]);
 });
+
+test("status probe executes only one internal command", async () => {
+  const commands: string[] = [];
+  const client = fakeClient(async (command) => {
+    commands.push(command);
+    return "hostname: Test Server\nmap: de_dust2\nplayers: 3 (16 max)";
+  });
+  const service = new RconService({ createClient: () => client });
+
+  const result = await service.probeStatus();
+
+  assert.deepEqual(commands, ["status"]);
+  assert.equal(result.status.map, "de_dust2");
+  assert.equal(result.status.players, 3);
+  assert.equal(typeof result.latencyMs, "number");
+});

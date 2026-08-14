@@ -104,7 +104,7 @@ export class RconService {
           latencyMs: Date.now() - started,
         });
       }
-      return response;
+      return { response, latencyMs: Date.now() - started };
     } catch (error) {
       this.discardClient(client);
       if (recordAudit) {
@@ -118,11 +118,16 @@ export class RconService {
   }
 
   execute(command: string) {
-    return this.enqueue(command, true);
+    return this.enqueue(command, true).then(({ response }) => response);
   }
 
   executeInternal(command: string) {
-    return this.enqueue(command, false);
+    return this.enqueue(command, false).then(({ response }) => response);
+  }
+
+  async probeStatus() {
+    const { response, latencyMs } = await this.enqueue("status", false);
+    return { status: parseStatus(response), latencyMs };
   }
 
   private enqueue(command: string, recordAudit: boolean) {
