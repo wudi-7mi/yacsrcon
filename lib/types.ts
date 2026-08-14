@@ -73,6 +73,41 @@ export type AnnouncementDocument = {
   reloadWarning?: string;
 };
 
+export type CustomVoteOption = {
+  Text: string;
+  Commands: string[];
+};
+
+export type CustomVote = {
+  Command: string;
+  CommandAliases: string[];
+  Description: string;
+  TimeToVote: number;
+  Options: Record<string, CustomVoteOption>;
+  DefaultOption: string;
+  Style: "center" | "chat";
+  MinVotePercentage: number;
+  Permission: { RequiresAll: boolean; Permissions: string[] };
+};
+
+export type CustomVotesConfig = {
+  CustomVotesEnabled: boolean;
+  VoteCooldown: number;
+  ChatPrefix: string;
+  ForceStyle: "none" | "center" | "chat";
+  CustomVotes: CustomVote[];
+  ConfigVersion: 2;
+};
+
+export type CustomVotesDocument = {
+  config: CustomVotesConfig;
+  hash: string;
+  persisted: boolean;
+  modifiedAt: string;
+  backupId?: string;
+  reloadWarning?: string;
+};
+
 export type DashboardData = {
   connected: boolean;
   latencyMs: number | null;

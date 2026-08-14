@@ -182,7 +182,8 @@ function auditSummary(entry: AuditEntry) {
     return `${operations[String(entry.operation)] ?? String(entry.operation)} ${String(entry.filename ?? entry.configId ?? "配置文件")}`;
   }
   if (entry.action === "plugin_configuration_updated") {
-    return `${String(entry.plugin ?? "插件")} · ${String(entry.messageCount ?? 0)} 条内容`;
+    const count = entry.voteCount != null ? `${String(entry.voteCount)} 个投票` : `${String(entry.messageCount ?? 0)} 条内容`;
+    return `${String(entry.plugin ?? "插件")} · ${count}`;
   }
   if (entry.action === "webhook_alert") {
     return `${entry.delivered ? "已发送" : "发送失败"}：${String(entry.event ?? "告警")}`;

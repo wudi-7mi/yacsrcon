@@ -158,6 +158,88 @@ class AdminHelperTransactionTest(unittest.TestCase):
                 {"OnCommandMsgs": [{"msg": "Bad", "cmd": "quit;exec"}]}
             )
 
+    def test_reads_and_writes_custom_votes_jsonc(self):
+        helper = load_helper()
+        with tempfile.TemporaryDirectory() as directory:
+            helper.PLUGIN_CONFIG_ROOT = os.path.join(directory, "runtime-config")
+            helper.PLUGIN_CUSTOM_CONFIG_ROOT = os.path.join(directory, "custom-config")
+            helper.PLUGIN_BACKUP_ROOT = os.path.join(directory, "backups")
+            runtime = os.path.join(
+                helper.PLUGIN_CONFIG_ROOT,
+                "CS2-CustomVotes",
+                "CS2-CustomVotes.json",
+            )
+            os.makedirs(os.path.dirname(runtime))
+            with open(runtime, "w", encoding="utf-8") as handle:
+                handle.write(
+                    '// generated configuration\n'
+                    '{"CustomVotesEnabled":true,"VoteCooldown":60,'
+                    '"ChatPrefix":"https://example.test // text",'
+                    '"ForceStyle":"none","CustomVotes":[{}],"ConfigVersion":2}'
+                )
+            current = helper.read_plugin_config("custom-votes")
+            self.assertEqual(current["config"]["CustomVotes"], [])
+            changed = {
+                **current["config"],
+                "CustomVotes": [
+                    {
+                        "Command": "cheats",
+                        "CommandAliases": ["svcheats"],
+                        "Description": "切换作弊模式",
+                        "TimeToVote": 30,
+                        "Options": {
+                            "Enable": {"Text": "启用", "Commands": ["sv_cheats 1"]},
+                            "Disable": {"Text": "禁用", "Commands": ["sv_cheats 0"]},
+                        },
+                        "DefaultOption": "Disable",
+                        "Style": "chat",
+                        "MinVotePercentage": -1,
+                        "Permission": {"RequiresAll": False, "Permissions": ["@css/generic"]},
+                    }
+                ],
+            }
+            with mock.patch.object(
+                helper.pwd,
+                "getpwnam",
+                return_value=mock.Mock(pw_uid=os.getuid(), pw_gid=os.getgid()),
+            ):
+                result = helper.write_plugin_config(
+                    "custom-votes", changed, current["hash"]
+                )
+            self.assertTrue(result["persisted"])
+            source, runtime = helper.plugin_config_paths("custom-votes")
+            for path in (source, runtime):
+                with open(path, encoding="utf-8") as handle:
+                    self.assertEqual(json.load(handle), changed)
+
+    def test_rejects_custom_vote_with_missing_default_option(self):
+        helper = load_helper()
+        vote = {
+            "Command": "test",
+            "CommandAliases": [],
+            "Description": "Test",
+            "TimeToVote": 30,
+            "Options": {
+                "Yes": {"Text": "Yes", "Commands": ["say yes"]},
+                "No": {"Text": "No", "Commands": ["say no"]},
+            },
+            "DefaultOption": "Missing",
+            "Style": "center",
+            "MinVotePercentage": 50,
+            "Permission": {"RequiresAll": False, "Permissions": []},
+        }
+        with self.assertRaises(SystemExit):
+            helper.validate_custom_votes_config(
+                {
+                    "CustomVotesEnabled": True,
+                    "VoteCooldown": 60,
+                    "ChatPrefix": "Server",
+                    "ForceStyle": "none",
+                    "CustomVotes": [vote],
+                    "ConfigVersion": 2,
+                }
+            )
+
     def test_parses_only_supported_server_environment_keys(self):
         helper = load_helper()
         with tempfile.TemporaryDirectory() as directory:

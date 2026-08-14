@@ -45,11 +45,19 @@ CFG_LOCK_FILE = "/run/yacsrcon-cs2-cfg.lock"
 CFG_BACKUP_LIMIT = 50
 PLUGIN_ROOT = "/home/steam/cs2/game/csgo/addons/counterstrikesharp/plugins"
 PLUGIN_CUSTOM_ROOT = "/home/steam/cs2/custom_files/addons/counterstrikesharp/plugins"
+PLUGIN_CONFIG_ROOT = "/home/steam/cs2/game/csgo/addons/counterstrikesharp/configs/plugins"
+PLUGIN_CUSTOM_CONFIG_ROOT = "/home/steam/cs2/custom_files/addons/counterstrikesharp/configs/plugins"
 PLUGIN_BACKUP_ROOT = "/home/steam/cs2/custom_files/backups/yacsrcon-plugins"
 PLUGIN_CONFIG_LOCK_FILE = "/run/yacsrcon-plugin-config.lock"
 PLUGIN_CONFIG_FILES = {
     "announcements": {
         "relative": "CS2AnnouncementBroadcaster/cfg/messages.json",
+        "location": "plugin",
+        "maximum": 256 * 1024,
+    },
+    "custom-votes": {
+        "relative": "CS2-CustomVotes/CS2-CustomVotes.json",
+        "location": "config",
         "maximum": 256 * 1024,
     },
 }
@@ -625,6 +633,96 @@ def validate_announcement_config(value):
     return result
 
 
+def validate_custom_votes_config(value):
+    require_object(value, "自定义投票配置")
+    allowed = {"CustomVotesEnabled", "VoteCooldown", "ChatPrefix", "ForceStyle", "CustomVotes", "ConfigVersion"}
+    if any(key not in allowed for key in value):
+        fail("自定义投票配置包含不支持的字段")
+    if not isinstance(value.get("CustomVotesEnabled"), bool):
+        fail("自定义投票总开关无效")
+    cooldown = value.get("VoteCooldown")
+    if not isinstance(cooldown, (int, float)) or isinstance(cooldown, bool) or not 0 <= cooldown <= 86400:
+        fail("自定义投票冷却时间无效")
+    prefix = value.get("ChatPrefix")
+    if not isinstance(prefix, str) or len(prefix) > 200 or "\x00" in prefix:
+        fail("自定义投票聊天前缀无效")
+    if value.get("ForceStyle") not in ("none", "center", "chat"):
+        fail("自定义投票全局显示方式无效")
+    if value.get("ConfigVersion") != 2:
+        fail("自定义投票配置版本必须为 2")
+    votes = value.get("CustomVotes")
+    if not isinstance(votes, list) or len(votes) > 100:
+        fail("自定义投票数量无效")
+    result_votes = []
+    commands = set()
+    for vote in votes:
+        require_object(vote, "自定义投票")
+        if not vote:
+            continue
+        vote_allowed = {"Command", "CommandAliases", "Description", "TimeToVote", "Options", "DefaultOption", "Style", "MinVotePercentage", "Permission"}
+        if any(key not in vote_allowed for key in vote):
+            fail("自定义投票包含不支持的字段")
+        command = vote.get("Command")
+        aliases = vote.get("CommandAliases")
+        if not isinstance(command, str) or not re.fullmatch(r"[a-zA-Z0-9_-]{1,32}", command):
+            fail("自定义投票命令无效")
+        if command.lower() in commands:
+            fail("自定义投票命令或别名重复")
+        commands.add(command.lower())
+        if not isinstance(aliases, list) or len(aliases) > 20:
+            fail("自定义投票命令别名无效")
+        for alias in aliases:
+            if not isinstance(alias, str) or not re.fullmatch(r"[a-zA-Z0-9_-]{1,32}", alias) or alias.lower() in commands:
+                fail("自定义投票命令别名无效或重复")
+            commands.add(alias.lower())
+        description = vote.get("Description")
+        if not isinstance(description, str) or not description or len(description) > 500 or "\x00" in description:
+            fail("自定义投票说明无效")
+        duration = vote.get("TimeToVote")
+        if not isinstance(duration, (int, float)) or isinstance(duration, bool) or not 5 <= duration <= 600:
+            fail("自定义投票时长无效")
+        options = vote.get("Options")
+        if not isinstance(options, dict) or not 2 <= len(options) <= 20:
+            fail("自定义投票选项数量必须为 2 到 20")
+        for option_name, option in options.items():
+            if not isinstance(option_name, str) or not option_name or len(option_name) > 64 or "\x00" in option_name:
+                fail("自定义投票选项名称无效")
+            require_object(option, "自定义投票选项")
+            if any(key not in {"Text", "Commands"} for key in option):
+                fail("自定义投票选项包含不支持的字段")
+            text = option.get("Text")
+            option_commands = option.get("Commands")
+            if not isinstance(text, str) or not text or len(text) > 200 or "\x00" in text:
+                fail("自定义投票选项文本无效")
+            if not isinstance(option_commands, list) or not 1 <= len(option_commands) <= 20:
+                fail("自定义投票选项命令数量无效")
+            if any(not isinstance(item, str) or not item.strip() or len(item) > 500 or "\n" in item or "\r" in item or "\x00" in item for item in option_commands):
+                fail("自定义投票选项命令无效")
+        if vote.get("DefaultOption") not in options:
+            fail("自定义投票默认选项不存在")
+        if vote.get("Style") not in ("center", "chat"):
+            fail("自定义投票显示方式无效")
+        percentage = vote.get("MinVotePercentage")
+        if not isinstance(percentage, int) or isinstance(percentage, bool) or not -1 <= percentage <= 100:
+            fail("自定义投票最低通过率无效")
+        permission = vote.get("Permission")
+        require_object(permission, "自定义投票权限")
+        if any(key not in {"RequiresAll", "Permissions"} for key in permission) or not isinstance(permission.get("RequiresAll"), bool):
+            fail("自定义投票权限设置无效")
+        permissions = permission.get("Permissions")
+        if not isinstance(permissions, list) or len(permissions) > 50 or any(not isinstance(item, str) or not re.fullmatch(r"[@#][a-zA-Z0-9_./-]{1,127}", item) for item in permissions):
+            fail("自定义投票权限列表无效")
+        result_votes.append(vote)
+    return {
+        "CustomVotesEnabled": value["CustomVotesEnabled"],
+        "VoteCooldown": cooldown,
+        "ChatPrefix": prefix,
+        "ForceStyle": value["ForceStyle"],
+        "CustomVotes": result_votes,
+        "ConfigVersion": 2,
+    }
+
+
 def plugin_config_definition(config_id):
     if not isinstance(config_id, str) or config_id not in PLUGIN_CONFIG_FILES:
         fail("插件配置 ID 不受支持")
@@ -632,17 +730,60 @@ def plugin_config_definition(config_id):
 
 
 def plugin_config_paths(config_id):
-    relative = plugin_config_definition(config_id)["relative"]
+    definition = plugin_config_definition(config_id)
+    relative = definition["relative"]
+    if definition["location"] == "config":
+        return os.path.join(PLUGIN_CUSTOM_CONFIG_ROOT, relative), os.path.join(PLUGIN_CONFIG_ROOT, relative)
     return os.path.join(PLUGIN_CUSTOM_ROOT, relative), os.path.join(PLUGIN_ROOT, relative)
 
 
 def validate_plugin_config(config_id, value):
     if config_id == "announcements":
         value = validate_announcement_config(value)
+    elif config_id == "custom-votes":
+        value = validate_custom_votes_config(value)
     encoded = json.dumps(value, ensure_ascii=False).encode("utf-8")
     if len(encoded) > plugin_config_definition(config_id)["maximum"]:
         fail("插件配置超过大小限制")
     return value
+
+
+def load_json_with_comments(handle):
+    source = handle.read()
+    output = []
+    index = 0
+    in_string = False
+    escaped = False
+    while index < len(source):
+        char = source[index]
+        following = source[index + 1] if index + 1 < len(source) else ""
+        if in_string:
+            output.append(char)
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            index += 1
+            continue
+        if char == '"':
+            in_string = True
+            output.append(char)
+            index += 1
+        elif char == "/" and following == "/":
+            index += 2
+            while index < len(source) and source[index] not in "\r\n":
+                index += 1
+        elif char == "/" and following == "*":
+            end = source.find("*/", index + 2)
+            if end < 0:
+                fail("插件配置包含未结束的注释")
+            index = end + 2
+        else:
+            output.append(char)
+            index += 1
+    return json.loads("".join(output))
 
 
 def read_plugin_config(config_id):
@@ -650,7 +791,7 @@ def read_plugin_config(config_id):
     path = source if os.path.exists(source) else runtime
     descriptor = safe_regular_file(path)
     with os.fdopen(descriptor, encoding="utf-8") as handle:
-        value = validate_plugin_config(config_id, json.load(handle))
+        value = validate_plugin_config(config_id, load_json_with_comments(handle))
     metadata = os.stat(path, follow_symlinks=False)
     return {
         "config": value,
@@ -724,10 +865,10 @@ def write_plugin_config(config_id, value, expected_hash):
     original_runtime = None
     if os.path.exists(source):
         with os.fdopen(safe_regular_file(source), encoding="utf-8") as handle:
-            original_source = json.load(handle)
+            original_source = load_json_with_comments(handle)
     if os.path.exists(runtime):
         with os.fdopen(safe_regular_file(runtime), encoding="utf-8") as handle:
-            original_runtime = json.load(handle)
+            original_runtime = load_json_with_comments(handle)
     try:
         atomic_json_write(source, value, uid, gid)
         atomic_json_write(runtime, value, uid, gid)
