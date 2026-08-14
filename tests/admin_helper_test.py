@@ -165,6 +165,98 @@ class AdminHelperTransactionTest(unittest.TestCase):
                 holder.wait(timeout=2)
                 holder.stdout.close()
 
+    def test_manages_only_whitelisted_cfg_files_with_history(self):
+        helper = load_helper()
+        with tempfile.TemporaryDirectory() as directory:
+            helper.CFG_SOURCE_DIR = os.path.join(directory, "source")
+            helper.CFG_RUNTIME_DIR = os.path.join(directory, "runtime")
+            helper.CFG_BACKUP_DIR = os.path.join(directory, "backups")
+            helper.CFG_LOCK_FILE = os.path.join(directory, "cfg.lock")
+            os.makedirs(helper.CFG_RUNTIME_DIR)
+            runtime = os.path.join(helper.CFG_RUNTIME_DIR, "server.cfg")
+            with open(runtime, "w", encoding="utf-8") as handle:
+                handle.write("hostname old\n")
+            with mock.patch.object(
+                helper,
+                "ensure_cfg_directories",
+                side_effect=lambda: (
+                    os.makedirs(helper.CFG_SOURCE_DIR, exist_ok=True),
+                    os.makedirs(helper.CFG_BACKUP_DIR, exist_ok=True),
+                    (os.getuid(), os.getgid()),
+                )[-1],
+            ):
+                before = helper.read_cfg("server")
+                result = helper.apply_cfg(
+                    "server", "hostname new\n", before["hash"]
+                )
+                self.assertTrue(result["persisted"])
+                self.assertEqual(result["content"], "hostname new\n")
+                with open(runtime, encoding="utf-8") as handle:
+                    self.assertEqual(handle.read(), "hostname new\n")
+                history = helper.cfg_history("server")
+                self.assertEqual(len(history), 1)
+                restored = helper.restore_cfg(
+                    "server", history[0]["id"], result["hash"]
+                )
+                self.assertEqual(restored["content"], "hostname old\n")
+
+            with self.assertRaises(SystemExit):
+                helper.read_cfg("../../etc/passwd")
+
+    def test_cfg_write_rejects_stale_hash_and_unsafe_content(self):
+        helper = load_helper()
+        with tempfile.TemporaryDirectory() as directory:
+            helper.CFG_SOURCE_DIR = os.path.join(directory, "source")
+            helper.CFG_RUNTIME_DIR = os.path.join(directory, "runtime")
+            helper.CFG_BACKUP_DIR = os.path.join(directory, "backups")
+            os.makedirs(helper.CFG_SOURCE_DIR)
+            os.makedirs(helper.CFG_RUNTIME_DIR)
+            for parent in (helper.CFG_SOURCE_DIR, helper.CFG_RUNTIME_DIR):
+                with open(os.path.join(parent, "custom_all.cfg"), "w", encoding="utf-8") as handle:
+                    handle.write("hostname current\n")
+            with self.assertRaises(SystemExit):
+                helper.apply_cfg("common", "hostname changed\n", "0" * 64)
+            with self.assertRaises(SystemExit):
+                helper.validate_cfg_content("hostname ok\x00quit")
+
+    def test_cfg_write_restores_both_copies_after_partial_failure(self):
+        helper = load_helper()
+        with tempfile.TemporaryDirectory() as directory:
+            helper.CFG_SOURCE_DIR = os.path.join(directory, "source")
+            helper.CFG_RUNTIME_DIR = os.path.join(directory, "runtime")
+            helper.CFG_BACKUP_DIR = os.path.join(directory, "backups")
+            for parent in (helper.CFG_SOURCE_DIR, helper.CFG_RUNTIME_DIR):
+                os.makedirs(parent)
+                with open(os.path.join(parent, "server.cfg"), "w", encoding="utf-8") as handle:
+                    handle.write("hostname old\n")
+
+            original_write = helper.atomic_cfg_write
+            runtime = os.path.join(helper.CFG_RUNTIME_DIR, "server.cfg")
+            failed = False
+
+            def fail_runtime_once(path, content, uid, gid):
+                nonlocal failed
+                if path == runtime and content == "hostname new\n" and not failed:
+                    failed = True
+                    raise OSError("simulated runtime write failure")
+                return original_write(path, content, uid, gid)
+
+            with mock.patch.object(
+                helper,
+                "ensure_cfg_directories",
+                side_effect=lambda: (
+                    os.makedirs(helper.CFG_BACKUP_DIR, exist_ok=True),
+                    (os.getuid(), os.getgid()),
+                )[-1],
+            ), mock.patch.object(helper, "atomic_cfg_write", side_effect=fail_runtime_once):
+                current = helper.read_cfg("server")
+                with self.assertRaisesRegex(RuntimeError, "已恢复原配置"):
+                    helper.apply_cfg("server", "hostname new\n", current["hash"])
+
+            for parent in (helper.CFG_SOURCE_DIR, helper.CFG_RUNTIME_DIR):
+                with open(os.path.join(parent, "server.cfg"), encoding="utf-8") as handle:
+                    self.assertEqual(handle.read(), "hostname old\n")
+
 
 if __name__ == "__main__":
     unittest.main()

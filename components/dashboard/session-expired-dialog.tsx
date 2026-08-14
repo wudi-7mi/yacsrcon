@@ -5,10 +5,14 @@ import { AlertTriangle, Copy, LogIn } from "lucide-react";
 
 export function SessionExpiredDialog({
   draft,
+  draftDescription = "未保存的草稿",
+  copyLabel = "复制草稿",
   onDiscard,
   onReauthenticate,
 }: {
   draft: string;
+  draftDescription?: string;
+  copyLabel?: string;
   onDiscard: () => void;
   onReauthenticate: (username: string, password: string) => Promise<void>;
 }) {
@@ -50,7 +54,7 @@ export function SessionExpiredDialog({
           <div>
             <h2 className="font-semibold">会话已过期</h2>
             <p className="mt-1 text-sm text-[var(--muted)]">
-              管理员草稿仍保留在当前页面。重新登录后可以继续编辑和保存。
+              {draftDescription}仍保留在当前页面。重新登录后可以继续编辑和保存。
             </p>
           </div>
         </div>
@@ -97,7 +101,7 @@ export function SessionExpiredDialog({
             onClick={() => void copyDraft()}
             className="flex items-center gap-2 rounded-lg border border-[var(--line)] px-3 py-2 text-xs"
           >
-            <Copy size={14} /> {copied ? "已复制草稿" : "复制草稿 JSON"}
+            <Copy size={14} /> {copied ? "已复制草稿" : copyLabel}
           </button>
           <button
             type="button"

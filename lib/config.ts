@@ -1,3 +1,4 @@
+import path from "node:path";
 import { z } from "zod";
 import { resolveStoragePaths } from "./storage-paths.ts";
 
@@ -13,6 +14,7 @@ const envSchema = z.object({
   DATABASE_PATH: z.string().default("./data/yacsrcon.db"),
   SESSION_PATH: z.string().min(1).optional(),
   AUDIT_PATH: z.string().min(1).optional(),
+  METRICS_PATH: z.string().min(1).optional(),
   AUDIT_MAX_BYTES: z.coerce
     .number()
     .int()
@@ -36,6 +38,7 @@ const environment = envSchema.parse({
   DATABASE_PATH: process.env.DATABASE_PATH,
   SESSION_PATH: process.env.SESSION_PATH,
   AUDIT_PATH: process.env.AUDIT_PATH,
+  METRICS_PATH: process.env.METRICS_PATH,
   AUDIT_MAX_BYTES: process.env.AUDIT_MAX_BYTES,
   ADMIN_HELPER_PATH: process.env.ADMIN_HELPER_PATH,
 });
@@ -45,10 +48,20 @@ const storage = resolveStoragePaths(
   environment.SESSION_PATH,
   environment.AUDIT_PATH,
 );
+const database = path.parse(storage.databasePath);
+const metricsPath = path.resolve(
+  /* turbopackIgnore: true */
+  environment.METRICS_PATH ??
+    path.join(database.dir, `${database.name || "yacsrcon"}.metrics.jsonl`),
+);
+if (Object.values(storage).includes(metricsPath)) {
+  throw new Error("METRICS_PATH must differ from database, session, and audit paths");
+}
 
 export const config = {
   ...environment,
   DATABASE_PATH: storage.databasePath,
   SESSION_PATH: storage.sessionPath,
   AUDIT_PATH: storage.auditPath,
+  METRICS_PATH: metricsPath,
 };

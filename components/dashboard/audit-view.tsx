@@ -11,6 +11,7 @@ const ACTIONS = [
   ["", "全部事件"],
   ["player_punishment", "玩家处罚"],
   ["admin_configuration_updated", "权限配置"],
+  ["cfg_updated", "服务器配置"],
   ["server_control", "服务器操作"],
   ["command", "RCON 命令"],
   ["command_error", "RCON 错误"],
@@ -19,6 +20,7 @@ const ACTIONS = [
 const ACTION_LABELS: Record<string, string> = {
   player_punishment: "玩家处罚",
   admin_configuration_updated: "权限配置更新",
+  cfg_updated: "服务器配置更新",
   server_control: "服务器操作",
   command: "RCON 命令",
   command_error: "RCON 命令失败",
@@ -166,6 +168,10 @@ function auditSummary(entry: AuditEntry) {
   if (entry.action === "server_control") {
     const operations: Record<string, string> = { start: "启动", stop: "停止", restart: "重启" };
     return `${operations[String(entry.operation)] ?? String(entry.operation)}服务器`;
+  }
+  if (entry.action === "cfg_updated") {
+    const operations: Record<string, string> = { write: "保存", restore: "回滚" };
+    return `${operations[String(entry.operation)] ?? String(entry.operation)} ${String(entry.filename ?? entry.configId ?? "配置文件")}`;
   }
   if (entry.command) return String(entry.command);
   if (entry.backupDirectory) return `备份：${String(entry.backupDirectory)}`;

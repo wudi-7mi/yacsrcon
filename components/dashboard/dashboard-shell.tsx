@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   Activity,
   AlertTriangle,
+  ChartNoAxesCombined,
+  FileCode2,
   FileClock,
   ChevronRight,
   Clock3,
@@ -21,10 +23,12 @@ import {
 import AdminManager from "@/components/admin-manager";
 import {
   AuditView,
+  ConfigView,
   ConsoleView,
   MapsView,
   OverviewView,
   PlayersView,
+  MonitoringView,
   ServerOperationsView,
 } from "@/components/dashboard/views";
 import type { DashboardTab } from "@/components/dashboard/types";
@@ -54,18 +58,22 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
   const [mobileNav, setMobileNav] = useState(false);
   const [adminDirty, setAdminDirty] = useState(false);
   const [adminDraft, setAdminDraft] = useState<AdminConfiguration | null>(null);
+  const [configDirty, setConfigDirty] = useState(false);
+  const [configDraft, setConfigDraft] = useState("");
   const [pendingDestination, setPendingDestination] = useState<
     DashboardTab | "logout" | null
   >(null);
 
   useEffect(() => {
-    if (sessionExpired && !adminDirty) router.replace("/login");
-  }, [adminDirty, router, sessionExpired]);
+    if (sessionExpired && !adminDirty && !configDirty) router.replace("/login");
+  }, [adminDirty, configDirty, router, sessionExpired]);
 
   const serializedDraft = useMemo(
-    () => (adminDraft ? JSON.stringify(adminDraft, null, 2) : ""),
-    [adminDraft],
+    () => configDirty ? configDraft : adminDraft ? JSON.stringify(adminDraft, null, 2) : "",
+    [adminDraft, configDirty, configDraft],
   );
+  const activeDirty =
+    (tab === "admins" && adminDirty) || (tab === "configs" && configDirty);
 
   async function reauthenticate(username: string, password: string) {
     try {
@@ -87,7 +95,7 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
   }
 
   function selectTab(next: DashboardTab) {
-    if (tab === "admins" && adminDirty && next !== "admins") {
+    if (activeDirty && next !== tab) {
       setPendingDestination(next);
       return;
     }
@@ -104,7 +112,7 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
   }
 
   function requestLogout() {
-    if (tab === "admins" && adminDirty) {
+    if (activeDirty) {
       setPendingDestination("logout");
       return;
     }
@@ -115,6 +123,8 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
     { id: "players", label: "玩家管理", icon: Users },
     { id: "maps", label: "地图与模式", icon: Map },
     { id: "admins", label: "管理员与权限", icon: ShieldCheck },
+    { id: "configs", label: "配置文件", icon: FileCode2 },
+    { id: "monitoring", label: "运行监控", icon: ChartNoAxesCombined },
     { id: "audit", label: "操作审计", icon: FileClock },
     { id: "operations", label: "服务器运维", icon: ServerCog },
     { id: "console", label: "RCON 控制台", icon: Terminal },
@@ -226,6 +236,16 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
               onUnauthorized={handleUnauthorized}
             />
           )}{" "}
+          {tab === "configs" && (
+            <ConfigView
+              onDirtyChange={setConfigDirty}
+              onDraftChange={setConfigDraft}
+              onUnauthorized={handleUnauthorized}
+            />
+          )}{" "}
+          {tab === "monitoring" && (
+            <MonitoringView onUnauthorized={handleUnauthorized} />
+          )}{" "}
           {tab === "audit" && (
             <AuditView onUnauthorized={handleUnauthorized} />
           )}{" "}
@@ -306,9 +326,9 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
                 <AlertTriangle size={18} />
               </span>
               <div>
-                <h2 className="font-semibold">放弃未保存的管理员更改？</h2>
+                <h2 className="font-semibold">放弃未保存的更改？</h2>
                 <p className="mt-1 text-sm text-[var(--muted)]">
-                  离开此页面后，当前管理员和权限组草稿将无法恢复。
+                  离开此页面后，当前{tab === "configs" ? "配置文件" : "管理员和权限组"}草稿将无法恢复。
                 </p>
               </div>
             </div>
@@ -340,9 +360,11 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
           </div>
         </div>
       )}
-      {sessionExpired && adminDirty && serializedDraft && (
+      {sessionExpired && activeDirty && serializedDraft && (
         <SessionExpiredDialog
           draft={serializedDraft}
+          draftDescription={tab === "configs" ? "配置文件草稿" : "管理员草稿"}
+          copyLabel={tab === "configs" ? "复制 CFG 草稿" : "复制草稿 JSON"}
           onDiscard={() => router.replace("/login")}
           onReauthenticate={reauthenticate}
         />

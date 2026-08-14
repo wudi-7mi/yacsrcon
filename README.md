@@ -38,7 +38,7 @@ helper and its sudoers rule so newly added restricted actions, such as ban-list
 access, are available to the updated application.
 
 The installer creates a root-owned `/usr/local/sbin/yacsrcon-admin-helper` and
-a sudoers rule limited to fixed configuration, ban-list, and CS2 process actions. The helper
+a sudoers rule limited to fixed configuration, CFG, ban-list, and CS2 process actions. The helper
 only accesses `admins.json`, `admin_groups.json`, and `admin_overrides.json` in
 the fixed CounterStrikeSharp config directory, plus read-only access to
 SimpleAdmin's fixed `bans.db` path. Every administrator configuration apply
@@ -46,6 +46,15 @@ validates the complete document, writes through same-directory temporary
 files, and stores the previous files under `configs/backups/yacsrcon/`. Ban and
 unban writes always use SimpleAdmin RCON commands; the helper never writes its
 SQLite database.
+
+The configuration page exposes only four fixed CFG identifiers: `server.cfg`,
+`on_boot.cfg`, `custom_all.cfg`, and `custom_bots.cfg`. The browser and API never
+accept filesystem paths. Saving validates the content and current SHA-256 hash,
+shows a diff for confirmation, then writes both the persistent copy under
+`/home/steam/cs2/custom_files/cfg` and the active copy under
+`/home/steam/cs2/game/csgo/cfg`. Each save and rollback first stores the current
+version under `/home/steam/cs2/custom_files/backups/yacsrcon-cfg`; the latest 50
+versions per file can be inspected and restored from the page.
 
 The server operations page is tied to the reference host deployment under
 `/home/wudi7mi/cs2-env` and `/home/steam/cs2`. The helper starts only the fixed
@@ -57,6 +66,13 @@ The audit center reads up to 200 recent matching records and skips malformed
 JSONL lines without hiding valid entries. The active audit file rotates at 5
 MiB by default and retains two older files. Set `AUDIT_MAX_BYTES` to adjust the
 threshold.
+
+Runtime monitoring samples player count, map, RCON latency, and connection state
+every 30 seconds independently of the browser. It retains 24 hours in a
+permission-restricted JSONL sidecar and presents 1, 6, 12, or 24-hour trends.
+The current page flags RCON outages and latency at or above 500 ms; external
+Webhook delivery is intentionally deferred. Set `METRICS_PATH` to override the
+default `<database-name>.metrics.jsonl` path.
 
 For a container deployment, install the helper on the host and expose it through a deliberately configured host-side service. Do not mount the Docker socket or grant the container unrestricted sudo access.
 
@@ -70,16 +86,16 @@ docker compose up -d --build
 ```
 
 The container uses host networking so it can reach a CS2 RCON socket bound to
-`127.0.1.1`. Session and audit data are persisted in the project's `data/`
+`127.0.1.1`. Session, audit, and monitoring data are persisted in the project's `data/`
 directory. The entrypoint initializes that directory and then drops privileges;
 set `PUID` and `PGID` in `.env.local` to the owner of the host directory when
 they are not 1000. When omitted, the entrypoint defaults both values to 1000.
 
-`SESSION_PATH` and `AUDIT_PATH` may be configured explicitly. Otherwise they
+`SESSION_PATH`, `AUDIT_PATH`, and `METRICS_PATH` may be configured explicitly. Otherwise they
 are derived beside `DATABASE_PATH` using its filename stem, regardless of its
-extension. For example, `state.sqlite` produces `state.sessions.json` and
-`state.jsonl`. Startup fails if any of the three paths resolve to the same
-file.
+extension. For example, `state.sqlite` produces `state.sessions.json`,
+`state.jsonl`, and `state.metrics.jsonl`. Startup fails if any of the four paths
+resolve to the same file.
 
 ## systemd
 
@@ -94,7 +110,9 @@ sudo systemctl enable --now yacsrcon
 
 The build prepares Next.js's standalone output. The service runs that production
 server on port `21590`, restarts on failure, and writes logs to the system
-journal.
+journal. The included unit pins all persistent sidecars to the repository's
+`data/` directory because the standalone server changes its runtime working
+directory.
 
 ## First phase scope
 
@@ -105,3 +123,5 @@ journal.
 - Map and mode/CFG shortcuts
 - Full RCON console with command history in the session and confirmation for high-impact commands
 - JSONL audit log
+- Restricted CFG editing with validation, diff confirmation, backups, and rollback
+- 24-hour server health history with short-term trends and in-app alerts

@@ -3,6 +3,8 @@ export type DashboardTab =
   | "players"
   | "maps"
   | "admins"
+  | "configs"
+  | "monitoring"
   | "audit"
   | "operations"
   | "console";

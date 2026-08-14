@@ -3,6 +3,7 @@ import datetime
 from collections import deque
 from contextlib import contextmanager
 import fcntl
+import hashlib
 import json
 import os
 import re
@@ -36,6 +37,16 @@ CS2_BINARY = os.path.join(CS2_DIRECTORY, "game/bin/linuxsteamrt64/cs2")
 STEAM_USER = "steam"
 RUNUSER = "/usr/sbin/runuser"
 SERVER_LOCK_FILE = "/run/yacsrcon-cs2-server.lock"
+CFG_SOURCE_DIR = "/home/steam/cs2/custom_files/cfg"
+CFG_RUNTIME_DIR = "/home/steam/cs2/game/csgo/cfg"
+CFG_BACKUP_DIR = "/home/steam/cs2/custom_files/backups/yacsrcon-cfg"
+CFG_LOCK_FILE = "/run/yacsrcon-cs2-cfg.lock"
+CFG_FILES = {
+    "server": {"filename": "server.cfg", "label": "服务器主配置"},
+    "boot": {"filename": "on_boot.cfg", "label": "启动后配置"},
+    "common": {"filename": "custom_all.cfg", "label": "全模式公共配置"},
+    "bots": {"filename": "custom_bots.cfg", "label": "机器人配置"},
+}
 ENV_KEYS = {
     "API_KEY", "IP", "PORT", "TICKRATE", "MAXPLAYERS", "RCON_PASSWORD",
     "STEAM_ACCOUNT", "SERVER_PASSWORD", "LAN", "EXEC",
@@ -267,6 +278,216 @@ def read_server_logs(limit=500):
     return [redact_log_line(line.rstrip("\r\n"))[:4000] for line in lines]
 
 
+def cfg_hash(content):
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+
+def validate_cfg_content(content):
+    if not isinstance(content, str):
+        fail("CFG 内容必须是字符串")
+    encoded = content.encode("utf-8")
+    if len(encoded) > 128 * 1024:
+        fail("CFG 内容超过 128 KiB 限制")
+    if "\x00" in content or any(
+        ord(character) < 32 and character not in "\n\r\t" for character in content
+    ):
+        fail("CFG 内容包含不允许的控制字符")
+    if any(len(line.encode("utf-8")) > 4096 for line in content.splitlines()):
+        fail("CFG 单行超过 4096 字节限制")
+    return content.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def cfg_definition(config_id):
+    if not isinstance(config_id, str) or config_id not in CFG_FILES:
+        fail("CFG 配置 ID 不受支持")
+    return CFG_FILES[config_id]
+
+
+def safe_regular_file(path):
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+        os.close(descriptor)
+        fail("CFG 目标不是普通文件")
+    return descriptor
+
+
+def read_cfg_path(path):
+    descriptor = safe_regular_file(path)
+    with os.fdopen(descriptor, encoding="utf-8") as handle:
+        return validate_cfg_content(handle.read())
+
+
+def cfg_paths(config_id):
+    filename = cfg_definition(config_id)["filename"]
+    return (
+        os.path.join(CFG_SOURCE_DIR, filename),
+        os.path.join(CFG_RUNTIME_DIR, filename),
+    )
+
+
+def read_cfg(config_id):
+    source, runtime = cfg_paths(config_id)
+    path = source if os.path.exists(source) else runtime
+    content = read_cfg_path(path)
+    metadata = os.stat(path, follow_symlinks=False)
+    return {
+        "id": config_id,
+        "label": cfg_definition(config_id)["label"],
+        "filename": cfg_definition(config_id)["filename"],
+        "content": content,
+        "hash": cfg_hash(content),
+        "persisted": path == source,
+        "modifiedAt": datetime.datetime.fromtimestamp(metadata.st_mtime, datetime.UTC).isoformat(),
+    }
+
+
+def ensure_cfg_directories():
+    steam = __import__("pwd").getpwnam(STEAM_USER)
+    if not stat.S_ISDIR(os.lstat(CFG_RUNTIME_DIR).st_mode):
+        fail("CFG 运行目录不是普通目录")
+    for directory in (CFG_SOURCE_DIR, os.path.dirname(CFG_BACKUP_DIR), CFG_BACKUP_DIR):
+        os.makedirs(directory, mode=0o750, exist_ok=True)
+        metadata = os.lstat(directory)
+        if not stat.S_ISDIR(metadata.st_mode):
+            fail("CFG 管理目录不是普通目录")
+        os.chown(directory, steam.pw_uid, steam.pw_gid)
+        os.chmod(directory, 0o750)
+    return steam.pw_uid, steam.pw_gid
+
+
+def atomic_cfg_write(path, content, uid, gid):
+    parent = os.path.dirname(path)
+    descriptor, temporary = tempfile.mkstemp(prefix=".yacsrcon-cfg-", dir=parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(content)
+            if content and not content.endswith("\n"):
+                handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chown(temporary, uid, gid)
+        os.chmod(temporary, 0o640)
+        if os.path.lexists(path) and not stat.S_ISREG(os.lstat(path).st_mode):
+            fail("CFG 目标不是普通文件")
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def cfg_backup(config_id, content, uid, gid):
+    backup_id = datetime.datetime.now(datetime.UTC).strftime("%Y%m%dT%H%M%S.%fZ")
+    directory = os.path.join(CFG_BACKUP_DIR, config_id)
+    os.makedirs(directory, mode=0o750, exist_ok=True)
+    if not stat.S_ISDIR(os.lstat(directory).st_mode):
+        fail("CFG 备份目录不是普通目录")
+    os.chown(directory, uid, gid)
+    os.chmod(directory, 0o750)
+    atomic_cfg_write(os.path.join(directory, f"{backup_id}.cfg"), content, uid, gid)
+    return backup_id
+
+
+def apply_cfg(config_id, content, expected_hash):
+    content = validate_cfg_content(content)
+    current = read_cfg(config_id)
+    if not isinstance(expected_hash, str) or expected_hash != current["hash"]:
+        fail("CFG 已被其他操作修改，请刷新后重试")
+    uid, gid = ensure_cfg_directories()
+    backup_id = cfg_backup(config_id, current["content"], uid, gid)
+    source, runtime = cfg_paths(config_id)
+    originals = {}
+    for path in (source, runtime):
+        originals[path] = read_cfg_path(path) if os.path.exists(path) else None
+    try:
+        atomic_cfg_write(source, content, uid, gid)
+        atomic_cfg_write(runtime, content, uid, gid)
+    except Exception as write_error:
+        rollback_failures = []
+        for path, original in originals.items():
+            try:
+                if original is None:
+                    if os.path.lexists(path):
+                        os.unlink(path)
+                else:
+                    atomic_cfg_write(path, original, uid, gid)
+            except Exception as rollback_error:
+                rollback_failures.append(f"{path}: {rollback_error}")
+        if rollback_failures:
+            raise RuntimeError(
+                f"CFG 写入失败且自动回滚不完整：{write_error}; "
+                + "; ".join(rollback_failures)
+                + f"; 备份 ID {backup_id}"
+            ) from write_error
+        raise RuntimeError(f"CFG 写入失败，已恢复原配置：{write_error}") from write_error
+    return {
+        **read_cfg(config_id),
+        "history": cfg_history(config_id),
+        "backupId": backup_id,
+    }
+
+
+def cfg_history(config_id):
+    cfg_definition(config_id)
+    directory = os.path.join(CFG_BACKUP_DIR, config_id)
+    if not os.path.lexists(directory):
+        return []
+    if not stat.S_ISDIR(os.lstat(directory).st_mode):
+        fail("CFG 备份目录不是普通目录")
+    result = []
+    for filename in sorted(os.listdir(directory), reverse=True)[:50]:
+        if not re.fullmatch(r"\d{8}T\d{6}\.\d{6}Z\.cfg", filename):
+            continue
+        path = os.path.join(directory, filename)
+        content = read_cfg_path(path)
+        result.append({
+            "id": filename[:-4],
+            "createdAt": datetime.datetime.strptime(filename[:-4], "%Y%m%dT%H%M%S.%fZ").replace(tzinfo=datetime.UTC).isoformat(),
+            "size": len(content.encode("utf-8")),
+            "hash": cfg_hash(content),
+        })
+    return result
+
+
+def restore_cfg(config_id, backup_id, expected_hash):
+    if not isinstance(backup_id, str) or not re.fullmatch(r"\d{8}T\d{6}\.\d{6}Z", backup_id):
+        fail("CFG 备份 ID 无效")
+    path = os.path.join(CFG_BACKUP_DIR, config_id, f"{backup_id}.cfg")
+    return apply_cfg(config_id, read_cfg_path(path), expected_hash)
+
+
+@contextmanager
+def cfg_operation_lock():
+    descriptor = os.open(CFG_LOCK_FILE, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_uid != os.geteuid():
+            fail("CFG 操作锁文件不安全")
+        os.fchmod(descriptor, 0o600)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            fail("已有 CFG 操作正在进行")
+        yield
+    finally:
+        os.close(descriptor)
+
+
+def cfg_operation(value):
+    require_object(value, "CFG 操作")
+    operation = value.get("operation")
+    config_id = value.get("id")
+    if operation == "list":
+        return [{key: item[key] for key in ("id", "label", "filename", "hash", "persisted", "modifiedAt")} for item in (read_cfg(key) for key in CFG_FILES)]
+    if operation == "read":
+        return {**read_cfg(config_id), "history": cfg_history(config_id)}
+    if operation not in ("write", "restore"):
+        fail("CFG 操作不受支持")
+    with cfg_operation_lock():
+        if operation == "write":
+            return apply_cfg(config_id, value.get("content"), value.get("expectedHash"))
+        return restore_cfg(config_id, value.get("backupId"), value.get("expectedHash"))
+
+
 def start_server():
     if find_cs2_process() is not None:
         fail("CS2 服务器已经在运行")
@@ -455,7 +676,7 @@ def apply_config(data):
 
 
 def main():
-    actions = ("read", "apply", "bans", "server-status", "server-logs", "server-start", "server-stop", "server-restart")
+    actions = ("read", "apply", "bans", "cfg", "server-status", "server-logs", "server-start", "server-stop", "server-restart")
     if len(sys.argv) != 2 or sys.argv[1] not in actions:
         fail("不支持的辅助程序操作")
 
@@ -463,6 +684,15 @@ def main():
         print(json.dumps(read_config(), ensure_ascii=False))
     elif sys.argv[1] == "bans":
         print(json.dumps(read_bans(), ensure_ascii=False))
+    elif sys.argv[1] == "cfg":
+        raw = sys.stdin.buffer.read(256 * 1024 + 1)
+        if len(raw) > 256 * 1024:
+            fail("CFG 操作输入超过限制")
+        try:
+            value = json.loads(raw)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            fail(str(error))
+        print(json.dumps(cfg_operation(value), ensure_ascii=False))
     elif sys.argv[1] == "server-status":
         print(json.dumps(server_status(), ensure_ascii=False))
     elif sys.argv[1] == "server-logs":

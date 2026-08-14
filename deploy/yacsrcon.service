@@ -13,6 +13,10 @@ Environment=NEXT_TELEMETRY_DISABLED=1
 Environment=PORT=21590
 Environment=HOSTNAME=0.0.0.0
 EnvironmentFile=/home/wudi7mi/yacsrcon/.env.local
+Environment=DATABASE_PATH=/home/wudi7mi/yacsrcon/data/yacsrcon.db
+Environment=SESSION_PATH=/home/wudi7mi/yacsrcon/data/yacsrcon.sessions.json
+Environment=AUDIT_PATH=/home/wudi7mi/yacsrcon/data/yacsrcon.jsonl
+Environment=METRICS_PATH=/home/wudi7mi/yacsrcon/data/yacsrcon.metrics.jsonl
 ExecStart=/home/wudi7mi/.nvm/versions/node/v24.18.0/bin/node .next/standalone/server.js
 Restart=on-failure
 RestartSec=3

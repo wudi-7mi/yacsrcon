@@ -67,6 +67,7 @@ export async function runAdminHelper(
     | "read"
     | "apply"
     | "bans"
+    | "cfg"
     | "server-status"
     | "server-logs"
     | "server-start"

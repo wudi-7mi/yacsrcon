@@ -106,3 +106,46 @@ export type ServerLogResult = {
   status: ServerProcessStatus;
   lines: string[];
 };
+
+export type ManagedCfgSummary = {
+  id: string;
+  label: string;
+  filename: string;
+  hash: string;
+  persisted: boolean;
+  modifiedAt: string;
+};
+
+export type ManagedCfgVersion = {
+  id: string;
+  createdAt: string;
+  size: number;
+  hash: string;
+};
+
+export type ManagedCfgDocument = ManagedCfgSummary & {
+  content: string;
+  history: ManagedCfgVersion[];
+  backupId?: string;
+};
+
+export type MetricSample = {
+  at: string;
+  connected: boolean;
+  players: number;
+  maxPlayers: number;
+  map: string | null;
+  latencyMs: number | null;
+  error?: string;
+};
+
+export type MonitoringResult = {
+  samples: MetricSample[];
+  summary: {
+    availabilityPercent: number;
+    disconnects: number;
+    averageLatencyMs: number | null;
+    peakPlayers: number;
+    currentAlert: "disconnected" | "high_latency" | null;
+  };
+};

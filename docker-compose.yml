@@ -9,5 +9,6 @@ services:
       DATABASE_PATH: /app/data/yacsrcon.db
       SESSION_PATH: /app/data/yacsrcon.sessions.json
       AUDIT_PATH: /app/data/yacsrcon.jsonl
+      METRICS_PATH: /app/data/yacsrcon.metrics.jsonl
     volumes:
       - ./data:/app/data
