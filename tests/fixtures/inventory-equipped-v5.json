@@ -13,6 +13,6 @@
   "knives": {
     "2": { "def": 500, "paint": 38, "uid": 106 }
   },
-  "musicKit": { "def": 1314, "musicId": 3, "uid": 107 },
+  "musicKit": { "musicId": 3, "stattrak": -1, "uid": 107 },
   "tWeapons": {}
 }

@@ -40,14 +40,15 @@ function summarizeItem(
   item: Record<string, unknown>,
   equipped: string[] = [],
 ): InventoryItemSummary {
+  const statTrak = numberField(item, "statTrak", "stattrak");
   return {
     uid,
-    itemId: stringField(item, "id", "def", "defindex", "itemId"),
+    itemId: stringField(item, "id", "def", "defindex", "itemId", "musicId"),
     name: stringField(item, "name", "displayName", "weapon"),
     nameTag: stringField(item, "nameTag", "nametag"),
     model: stringField(item, "model", "modelKey", "type"),
     wear: numberField(item, "wear", "paintwear"),
-    statTrak: numberField(item, "statTrak", "stattrak"),
+    statTrak: statTrak !== null && statTrak >= 0 ? statTrak : null,
     equipped: [
       ...equipped,
       item.equipped === true ? "通用" : null,

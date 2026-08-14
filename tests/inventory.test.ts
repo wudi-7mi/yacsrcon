@@ -41,9 +41,10 @@ test("expands real equipped v5 categories into actual items", () => {
     "collectible",
     "musicKit",
   ]);
-  assert.deepEqual(result.map((item) => item.itemId), ["5105", "5036", "7", "16", "500", "874", "1314"]);
+  assert.deepEqual(result.map((item) => item.itemId), ["5105", "5036", "7", "16", "500", "874", "3"]);
   assert.deepEqual(result.find((item) => item.uid === "ctWeapons:7")?.equipped, ["CT", "CT 武器"]);
   assert.deepEqual(result.find((item) => item.uid === "agents:2")?.equipped, ["T", "探员"]);
+  assert.equal(result.find((item) => item.uid === "musicKit")?.statTrak, null);
   assert.equal(result.some((item) => item.uid === "gloves" || item.uid === "tWeapons"), false);
 });
 
