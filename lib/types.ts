@@ -131,6 +131,26 @@ export type PluginActionResult = {
   response: string;
 };
 
+export type InventoryItemSummary = {
+  uid: string;
+  itemId: string | null;
+  name: string | null;
+  nameTag: string | null;
+  model: string | null;
+  wear: number | null;
+  statTrak: number | null;
+  equipped: string[];
+  raw: Record<string, unknown>;
+};
+
+export type InventorySimulatorResult = {
+  steamId: string;
+  serviceUrl: string;
+  inventory: InventoryItemSummary[];
+  equipped: InventoryItemSummary[];
+  counts: { inventory: number; equipped: number };
+};
+
 export type DashboardData = {
   connected: boolean;
   latencyMs: number | null;

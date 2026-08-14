@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Ban, Skull, UserMinus, Users } from "lucide-react";
+import { Backpack, Ban, Skull, UserMinus, Users } from "lucide-react";
 import { Empty, PageTitle } from "@/components/dashboard/view-primitives";
 import { BanList } from "@/components/punishments/ban-list";
 import { OfflineBanPanel } from "@/components/punishments/offline-ban-panel";
 import { PunishmentDialog } from "@/components/punishments/punishment-dialog";
+import { InventoryDrawer } from "@/components/plugins/inventory-drawer";
 import type { ActionTarget } from "@/components/punishments/types";
 import { useApiRequest } from "@/hooks/use-api-request";
 import { ApiError } from "@/lib/api-client";
@@ -27,6 +28,7 @@ export function PlayersView({
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [target, setTarget] = useState<ActionTarget | null>(null);
+  const [inventoryTarget, setInventoryTarget] = useState<{ steamId: string; name: string } | null>(null);
 
   const loadBans = useCallback(async () => {
     setLoadingBans(true);
@@ -96,7 +98,7 @@ export function PlayersView({
               return (
                 <div
                   key={player.userid}
-                  className="grid gap-3 px-5 py-4 md:grid-cols-[minmax(0,1fr)_90px_180px_auto] md:items-center"
+                  className="grid gap-3 px-5 py-4 md:grid-cols-[minmax(0,1fr)_70px_170px_280px] md:items-center"
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium">
@@ -113,6 +115,12 @@ export function PlayersView({
                     {steamId}
                   </span>
                   <span className="flex flex-wrap gap-2 md:justify-end">
+                    <ActionButton
+                      icon={Backpack}
+                      label="库存"
+                      disabled={!manageable}
+                      onClick={() => setInventoryTarget({ steamId, name: player.name })}
+                    />
                     <ActionButton
                       icon={Skull}
                       label="击杀"
@@ -162,6 +170,14 @@ export function PlayersView({
             await execute(payload);
             setTarget(null);
           }}
+        />
+      )}
+      {inventoryTarget && (
+        <InventoryDrawer
+          steamId={inventoryTarget.steamId}
+          playerName={inventoryTarget.name}
+          onClose={() => setInventoryTarget(null)}
+          onUnauthorized={onUnauthorized}
         />
       )}
     </>

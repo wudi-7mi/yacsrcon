@@ -6,6 +6,7 @@ import { Empty, PageTitle } from "@/components/dashboard/view-primitives";
 import { AnnouncementManager } from "@/components/plugins/announcement-manager";
 import { CustomVotesManager } from "@/components/plugins/custom-votes-manager";
 import { GameModeManager } from "@/components/plugins/game-mode-manager";
+import { InventoryManager } from "@/components/plugins/inventory-manager";
 import { useApiRequest } from "@/hooks/use-api-request";
 import type { PluginCenterResult, PluginIntegration } from "@/lib/types";
 
@@ -40,6 +41,7 @@ export function PluginCenterView({ onDirtyChange, onDraftChange, onUnauthorized 
   if (module === "announcement-broadcaster") return <AnnouncementManager onBack={() => setModule(null)} onDirtyChange={onDirtyChange} onDraftChange={onDraftChange} onUnauthorized={onUnauthorized} />;
   if (module === "custom-votes") return <CustomVotesManager onBack={() => setModule(null)} onDirtyChange={onDirtyChange} onDraftChange={onDraftChange} onUnauthorized={onUnauthorized} />;
   if (module === "gamemode-manager") return <GameModeManager onBack={() => setModule(null)} onUnauthorized={onUnauthorized} />;
+  if (module === "inventory-simulator") return <InventoryManager onBack={() => setModule(null)} onUnauthorized={onUnauthorized} />;
 
   return <>
     <PageTitle eyebrow="服务器管理 / 插件" title="插件中心" copy="集中查看当前服务器的特色插件，并进入已接入的专用管理功能。" />
@@ -55,7 +57,7 @@ export function PluginCenterView({ onDirtyChange, onDraftChange, onUnauthorized 
       </button>
     </div>
     {data?.plugins.length ? <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-      {data.plugins.map((plugin) => <PluginCard key={plugin.id} plugin={plugin} onOpen={["announcement-broadcaster", "custom-votes", "gamemode-manager"].includes(plugin.id) ? () => setModule(plugin.id) : undefined} />)}
+      {data.plugins.map((plugin) => <PluginCard key={plugin.id} plugin={plugin} onOpen={["announcement-broadcaster", "custom-votes", "gamemode-manager", "inventory-simulator"].includes(plugin.id) ? () => setModule(plugin.id) : undefined} />)}
     </div> : <section className="rounded-lg border border-[var(--line)] bg-[var(--panel)]"><Empty icon={Boxes} text={loading ? "正在读取插件状态..." : "没有可识别的插件"} /></section>}
   </>;
 }
