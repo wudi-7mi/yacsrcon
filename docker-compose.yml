@@ -10,5 +10,6 @@ services:
       SESSION_PATH: /app/data/yacsrcon.sessions.json
       AUDIT_PATH: /app/data/yacsrcon.jsonl
       METRICS_PATH: /app/data/yacsrcon.metrics.jsonl
+      ALERT_STATE_PATH: /app/data/yacsrcon.alerts.json
     volumes:
       - ./data:/app/data

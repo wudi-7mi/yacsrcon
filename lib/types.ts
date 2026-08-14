@@ -149,3 +149,63 @@ export type MonitoringResult = {
     currentAlert: "disconnected" | "high_latency" | null;
   };
 };
+
+export type AlertKind = "disconnected" | "high_latency";
+export type AlertEvent = AlertKind | "recovered" | "latency_recovered" | "test";
+
+export type AlertStatus = {
+  enabled: boolean;
+  destination: string | null;
+  active: AlertKind | null;
+  lastSentAt: string | null;
+  thresholds: {
+    disconnectSamples: number;
+    highLatencyMs: number;
+    highLatencySamples: number;
+    cooldownMinutes: number;
+  };
+};
+
+export type StorageUsage = { files: number; bytes: number };
+
+export type MaintenanceStatus = {
+  filesystems: {
+    application: { totalBytes: number; freeBytes: number };
+    cs2: { totalBytes: number; freeBytes: number };
+  };
+  cfgBackups: StorageUsage;
+  adminBackups: StorageUsage;
+  applicationData: StorageUsage;
+  cfgBackupLimit: number;
+  health: HealthResult;
+};
+
+export type HealthResult = {
+  status: "ok" | "degraded";
+  at: string;
+  uptimeSeconds: number;
+  checks: {
+    web: "ok";
+    monitoring: "ok" | "stale" | "missing";
+    rcon: "connected" | "disconnected" | "unknown";
+  };
+};
+
+export type RecoveryExport = {
+  format: "yacsrcon-recovery-v1";
+  generatedAt: string;
+  serverName: string;
+  admins: AdminConfiguration;
+  configs: ManagedCfgDocument[];
+  bans: BanRecord[] | null;
+  monitoring: MonitoringResult;
+  audit: AuditResult;
+  warnings: string[];
+};
+
+export type RecoveryResult = {
+  ok: true;
+  adminCount: number;
+  configCount: number;
+  reloadWarning?: string;
+};

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { runAdminHelper } from "./admin-config.ts";
+import { config } from "./config.ts";
 import type { ManagedCfgDocument, ManagedCfgSummary } from "./types.ts";
 
 export const cfgIdSchema = z.enum(["server", "boot", "common", "bots"]);
@@ -23,7 +24,10 @@ export const cfgMutationSchema = z.discriminatedUnion("operation", [
 ]);
 
 async function cfgHelper(value: Record<string, unknown>) {
-  const { stdout } = await runAdminHelper("cfg", JSON.stringify(value));
+  const { stdout } = await runAdminHelper(
+    "cfg",
+    JSON.stringify({ ...value, retention: config.CFG_BACKUP_LIMIT }),
+  );
   return JSON.parse(stdout) as unknown;
 }
 

@@ -59,3 +59,18 @@ test("reports high latency and current disconnect alerts", () => {
     "disconnected",
   );
 });
+
+test("uses the configured high latency threshold", () => {
+  const samples = [
+    {
+      at: "2026-08-13T00:00:00.000Z",
+      connected: true,
+      players: 2,
+      maxPlayers: 16,
+      map: "de_dust2",
+      latencyMs: 700,
+    },
+  ];
+  assert.equal(summarizeMetrics(samples, 1000).currentAlert, null);
+  assert.equal(summarizeMetrics(samples, 500).currentAlert, "high_latency");
+});

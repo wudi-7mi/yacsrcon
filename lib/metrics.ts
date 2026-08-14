@@ -10,6 +10,7 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import { config } from "./config.ts";
+import { processMetricAlert } from "./alerts.ts";
 import { rcon } from "./rcon.ts";
 import type { MetricSample, MonitoringResult } from "./types.ts";
 
@@ -40,7 +41,10 @@ export function parseMetricText(text: string, since = 0) {
   return samples;
 }
 
-export function summarizeMetrics(samples: MetricSample[]): MonitoringResult["summary"] {
+export function summarizeMetrics(
+  samples: MetricSample[],
+  highLatencyMs = 500,
+): MonitoringResult["summary"] {
   const connected = samples.filter((sample) => sample.connected);
   let disconnects = 0;
   for (let index = 0; index < samples.length; index += 1) {
@@ -63,7 +67,7 @@ export function summarizeMetrics(samples: MetricSample[]): MonitoringResult["sum
     peakPlayers: Math.max(0, ...samples.map((sample) => sample.players)),
     currentAlert: !latest?.connected
       ? "disconnected"
-      : (latest.latencyMs ?? 0) >= 500
+      : (latest.latencyMs ?? 0) >= highLatencyMs
         ? "high_latency"
         : null,
   };
@@ -165,6 +169,7 @@ export async function collectMetric() {
     };
   }
   await recordMetric(sample);
+  await processMetricAlert(sample);
 }
 
 export async function readMonitoring(hours = 6): Promise<MonitoringResult> {
@@ -175,7 +180,22 @@ export async function readMonitoring(hours = 6): Promise<MonitoringResult> {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
   const samples = parseMetricText(text, Date.now() - hours * 60 * 60 * 1000);
-  return { samples: downsampleMetrics(samples), summary: summarizeMetrics(samples) };
+  return {
+    samples: downsampleMetrics(samples),
+    summary: summarizeMetrics(samples, config.ALERT_HIGH_LATENCY_MS),
+  };
+}
+
+export async function readLatestMetric(): Promise<MetricSample | null> {
+  try {
+    const samples = parseMetricText(
+      await readFile(/* turbopackIgnore: true */ config.METRICS_PATH, "utf8"),
+    );
+    return samples.at(-1) ?? null;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
 }
 
 declare global {

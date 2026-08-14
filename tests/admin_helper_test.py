@@ -275,6 +275,9 @@ class AdminHelperTransactionTest(unittest.TestCase):
             self.assertNotIn("20260814T010000.000000Z.cfg", backups)
             self.assertIn("20260814T010052.000000Z.cfg", backups)
 
+            helper.prune_cfg_backups("server", 5)
+            self.assertEqual(len(os.listdir(backup_directory)), 5)
+
     def test_cfg_privilege_drop_removes_root_before_file_operations(self):
         helper = load_helper()
         steam = mock.Mock(pw_uid=1234, pw_gid=2345)
@@ -287,6 +290,29 @@ class AdminHelperTransactionTest(unittest.TestCase):
             helper.drop_to_steam()
 
         self.assertEqual(calls, [("groups", []), ("gid", 2345), ("uid", 1234)])
+
+    def test_storage_usage_counts_regular_files_and_skips_symlinks(self):
+        helper = load_helper()
+        with tempfile.TemporaryDirectory() as directory:
+            nested = os.path.join(directory, "nested")
+            os.makedirs(nested)
+            with open(os.path.join(directory, "one.cfg"), "wb") as handle:
+                handle.write(b"1234")
+            with open(os.path.join(nested, "two.cfg"), "wb") as handle:
+                handle.write(b"123456")
+            os.symlink(os.path.join(directory, "one.cfg"), os.path.join(directory, "ignored.cfg"))
+
+            self.assertEqual(
+                helper.fixed_directory_usage(directory),
+                {"files": 2, "bytes": 10},
+            )
+
+    def test_cfg_retention_is_bounded(self):
+        helper = load_helper()
+        self.assertEqual(helper.cfg_retention(25), 25)
+        for invalid in (4, 201, True, "50"):
+            with self.assertRaises(SystemExit):
+                helper.cfg_retention(invalid)
 
 
 if __name__ == "__main__":

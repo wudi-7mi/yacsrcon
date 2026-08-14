@@ -53,8 +53,9 @@ accept filesystem paths. Saving validates the content and current SHA-256 hash,
 shows a diff for confirmation, then writes both the persistent copy under
 `/home/steam/cs2/custom_files/cfg` and the active copy under
 `/home/steam/cs2/game/csgo/cfg`. Each save and rollback first stores the current
-version under `/home/steam/cs2/custom_files/backups/yacsrcon-cfg`; the latest 50
-versions per file can be inspected and restored from the page.
+version under `/home/steam/cs2/custom_files/backups/yacsrcon-cfg`. Set
+`CFG_BACKUP_LIMIT` from 5 to 200 to control how many versions are retained per
+file; older versions are deleted after a new backup is created.
 
 The server operations page is tied to the reference host deployment under
 `/home/wudi7mi/cs2-env` and `/home/steam/cs2`. The helper starts only the fixed
@@ -70,9 +71,28 @@ threshold.
 Runtime monitoring samples player count, map, RCON latency, and connection state
 every 30 seconds independently of the browser. It retains 24 hours in a
 permission-restricted JSONL sidecar and presents 1, 6, 12, or 24-hour trends.
-The current page flags RCON outages and latency at or above 500 ms; external
-Webhook delivery is intentionally deferred. Set `METRICS_PATH` to override the
-default `<database-name>.metrics.jsonl` path.
+The current page flags RCON outages and high latency. Set `METRICS_PATH` to
+override the default `<database-name>.metrics.jsonl` path.
+
+Set `WEBHOOK_URL` to enable generic JSON alerts. `WEBHOOK_TOKEN`, when present,
+is sent as an `Authorization: Bearer` value. Disconnect and high-latency alerts
+require consecutive failed samples and use a reminder cooldown; recovery events
+are sent as soon as a healthy sample arrives. Thresholds are controlled by
+`ALERT_DISCONNECT_SAMPLES`, `ALERT_HIGH_LATENCY_MS`,
+`ALERT_HIGH_LATENCY_SAMPLES`, and `ALERT_COOLDOWN_MINUTES`. Delivery state is
+stored in the permission-restricted `ALERT_STATE_PATH` sidecar so service
+restarts do not reset deduplication.
+
+The public `/api/health` endpoint returns `200` only when monitoring is fresh and
+RCON is connected; otherwise it returns `503` without exposing credentials or
+internal paths. The operations page shows application data, CFG backup, and
+administrator backup usage. Its recovery export contains current administrator
+configuration, the four managed CFG files, bans, recent audit entries, and
+24-hour monitoring data. Applying that package restores only administrator and
+CFG configuration with automatic rollback on a detected failure. It never
+overwrites sessions, environment secrets, audit files, monitoring history, or
+the SimpleAdmin database. Keep `.env.local` in a separate protected backup for
+complete host recovery.
 
 For a container deployment, install the helper on the host and expose it through a deliberately configured host-side service. Do not mount the Docker socket or grant the container unrestricted sudo access.
 
@@ -91,11 +111,11 @@ directory. The entrypoint initializes that directory and then drops privileges;
 set `PUID` and `PGID` in `.env.local` to the owner of the host directory when
 they are not 1000. When omitted, the entrypoint defaults both values to 1000.
 
-`SESSION_PATH`, `AUDIT_PATH`, and `METRICS_PATH` may be configured explicitly. Otherwise they
+`SESSION_PATH`, `AUDIT_PATH`, `METRICS_PATH`, and `ALERT_STATE_PATH` may be configured explicitly. Otherwise they
 are derived beside `DATABASE_PATH` using its filename stem, regardless of its
 extension. For example, `state.sqlite` produces `state.sessions.json`,
-`state.jsonl`, and `state.metrics.jsonl`. Startup fails if any of the four paths
-resolve to the same file.
+`state.jsonl`, `state.metrics.jsonl`, and `state.alerts.json`. Startup fails if
+any of the five paths resolve to the same file.
 
 ## systemd
 
@@ -125,3 +145,5 @@ directory.
 - JSONL audit log
 - Restricted CFG editing with validation, diff confirmation, backups, and rollback
 - 24-hour server health history with short-term trends and in-app alerts
+- Webhook alerts with sustained thresholds, recovery notifications, and cooldowns
+- Health checks, storage usage, bounded CFG backups, and logical recovery packages

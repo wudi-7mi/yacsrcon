@@ -390,7 +390,7 @@ def prune_cfg_backups(config_id, keep=CFG_BACKUP_LIMIT):
         os.unlink(os.path.join(directory, filename))
 
 
-def cfg_backup(config_id, content, uid, gid):
+def cfg_backup(config_id, content, uid, gid, retention=CFG_BACKUP_LIMIT):
     backup_id = datetime.datetime.now(datetime.UTC).strftime("%Y%m%dT%H%M%S.%fZ")
     directory = os.path.join(CFG_BACKUP_DIR, config_id)
     os.makedirs(directory, mode=0o750, exist_ok=True)
@@ -398,17 +398,17 @@ def cfg_backup(config_id, content, uid, gid):
         fail("CFG 备份目录不是普通目录")
     os.chmod(directory, 0o750)
     atomic_cfg_write(os.path.join(directory, f"{backup_id}.cfg"), content, uid, gid)
-    prune_cfg_backups(config_id)
+    prune_cfg_backups(config_id, retention)
     return backup_id
 
 
-def apply_cfg(config_id, content, expected_hash):
+def apply_cfg(config_id, content, expected_hash, retention=CFG_BACKUP_LIMIT):
     content = validate_cfg_content(content)
     current = read_cfg(config_id)
     if not isinstance(expected_hash, str) or expected_hash != current["hash"]:
         fail("CFG 已被其他操作修改，请刷新后重试")
     uid, gid = ensure_cfg_directories()
-    backup_id = cfg_backup(config_id, current["content"], uid, gid)
+    backup_id = cfg_backup(config_id, current["content"], uid, gid, retention)
     source, runtime = cfg_paths(config_id)
     originals = {}
     for path in (source, runtime):
@@ -436,12 +436,12 @@ def apply_cfg(config_id, content, expected_hash):
         raise RuntimeError(f"CFG 写入失败，已恢复原配置：{write_error}") from write_error
     return {
         **read_cfg(config_id),
-        "history": cfg_history(config_id),
+        "history": cfg_history(config_id, retention),
         "backupId": backup_id,
     }
 
 
-def cfg_history(config_id):
+def cfg_history(config_id, limit=CFG_BACKUP_LIMIT):
     cfg_definition(config_id)
     directory = os.path.join(CFG_BACKUP_DIR, config_id)
     if not os.path.lexists(directory):
@@ -449,7 +449,7 @@ def cfg_history(config_id):
     if not stat.S_ISDIR(os.lstat(directory).st_mode):
         fail("CFG 备份目录不是普通目录")
     result = []
-    for filename in sorted(os.listdir(directory), reverse=True)[:CFG_BACKUP_LIMIT]:
+    for filename in sorted(os.listdir(directory), reverse=True)[:limit]:
         if not re.fullmatch(r"\d{8}T\d{6}\.\d{6}Z\.cfg", filename):
             continue
         path = os.path.join(directory, filename)
@@ -463,11 +463,11 @@ def cfg_history(config_id):
     return result
 
 
-def restore_cfg(config_id, backup_id, expected_hash):
+def restore_cfg(config_id, backup_id, expected_hash, retention=CFG_BACKUP_LIMIT):
     if not isinstance(backup_id, str) or not re.fullmatch(r"\d{8}T\d{6}\.\d{6}Z", backup_id):
         fail("CFG 备份 ID 无效")
     path = os.path.join(CFG_BACKUP_DIR, config_id, f"{backup_id}.cfg")
-    return apply_cfg(config_id, read_cfg_path(path), expected_hash)
+    return apply_cfg(config_id, read_cfg_path(path), expected_hash, retention)
 
 
 @contextmanager
@@ -498,23 +498,66 @@ def drop_to_steam():
     os.setuid(steam.pw_uid)
 
 
+def cfg_retention(value):
+    if not isinstance(value, int) or isinstance(value, bool) or not 5 <= value <= 200:
+        fail("CFG 备份保留数量无效")
+    return value
+
+
+def fixed_directory_usage(directory):
+    if not os.path.lexists(directory):
+        return {"files": 0, "bytes": 0}
+    if not stat.S_ISDIR(os.lstat(directory).st_mode):
+        fail("备份目录不是普通目录")
+    files = 0
+    size = 0
+    pending = [directory]
+    while pending:
+        current = pending.pop()
+        for entry in os.scandir(current):
+            if entry.is_symlink():
+                continue
+            if entry.is_dir(follow_symlinks=False):
+                pending.append(entry.path)
+            elif entry.is_file(follow_symlinks=False):
+                files += 1
+                size += entry.stat(follow_symlinks=False).st_size
+            if files > 100000:
+                fail("备份文件数量超过统计限制")
+    return {"files": files, "bytes": size}
+
+
+def storage_status():
+    drop_to_steam()
+    filesystem = os.statvfs(CS2_DIRECTORY)
+    return {
+        "filesystem": {
+            "totalBytes": filesystem.f_blocks * filesystem.f_frsize,
+            "freeBytes": filesystem.f_bavail * filesystem.f_frsize,
+        },
+        "cfgBackups": fixed_directory_usage(CFG_BACKUP_DIR),
+        "adminBackups": fixed_directory_usage(BACKUP_DIR),
+    }
+
+
 def cfg_operation(value):
     require_object(value, "CFG 操作")
     operation = value.get("operation")
     config_id = value.get("id")
+    retention = cfg_retention(value.get("retention", CFG_BACKUP_LIMIT))
     if operation == "list":
         drop_to_steam()
         return [{key: item[key] for key in ("id", "label", "filename", "hash", "persisted", "modifiedAt")} for item in (read_cfg(key) for key in CFG_FILES)]
     if operation == "read":
         drop_to_steam()
-        return {**read_cfg(config_id), "history": cfg_history(config_id)}
+        return {**read_cfg(config_id), "history": cfg_history(config_id, retention)}
     if operation not in ("write", "restore"):
         fail("CFG 操作不受支持")
     with cfg_operation_lock():
         drop_to_steam()
         if operation == "write":
-            return apply_cfg(config_id, value.get("content"), value.get("expectedHash"))
-        return restore_cfg(config_id, value.get("backupId"), value.get("expectedHash"))
+            return apply_cfg(config_id, value.get("content"), value.get("expectedHash"), retention)
+        return restore_cfg(config_id, value.get("backupId"), value.get("expectedHash"), retention)
 
 
 def start_server():
@@ -705,7 +748,7 @@ def apply_config(data):
 
 
 def main():
-    actions = ("read", "apply", "bans", "cfg", "server-status", "server-logs", "server-start", "server-stop", "server-restart")
+    actions = ("read", "apply", "bans", "cfg", "storage-status", "server-status", "server-logs", "server-start", "server-stop", "server-restart")
     if len(sys.argv) != 2 or sys.argv[1] not in actions:
         fail("不支持的辅助程序操作")
 
@@ -722,6 +765,8 @@ def main():
         except (json.JSONDecodeError, UnicodeDecodeError) as error:
             fail(str(error))
         print(json.dumps(cfg_operation(value), ensure_ascii=False))
+    elif sys.argv[1] == "storage-status":
+        print(json.dumps(storage_status(), ensure_ascii=False))
     elif sys.argv[1] == "server-status":
         print(json.dumps(server_status(), ensure_ascii=False))
     elif sys.argv[1] == "server-logs":

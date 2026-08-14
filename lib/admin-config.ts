@@ -72,7 +72,8 @@ export async function runAdminHelper(
     | "server-logs"
     | "server-start"
     | "server-stop"
-    | "server-restart",
+    | "server-restart"
+    | "storage-status",
   input?: string,
 ) {
   return new Promise<{ stdout: string }>((resolve, reject) => {

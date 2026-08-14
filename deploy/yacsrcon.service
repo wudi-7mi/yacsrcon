@@ -17,6 +17,7 @@ Environment=DATABASE_PATH=/home/wudi7mi/yacsrcon/data/yacsrcon.db
 Environment=SESSION_PATH=/home/wudi7mi/yacsrcon/data/yacsrcon.sessions.json
 Environment=AUDIT_PATH=/home/wudi7mi/yacsrcon/data/yacsrcon.jsonl
 Environment=METRICS_PATH=/home/wudi7mi/yacsrcon/data/yacsrcon.metrics.jsonl
+Environment=ALERT_STATE_PATH=/home/wudi7mi/yacsrcon/data/yacsrcon.alerts.json
 ExecStart=/home/wudi7mi/.nvm/versions/node/v24.18.0/bin/node .next/standalone/server.js
 Restart=on-failure
 RestartSec=3
