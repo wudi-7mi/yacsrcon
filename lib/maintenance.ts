@@ -103,8 +103,20 @@ export async function readMaintenanceStatus(): Promise<MaintenanceStatus> {
   };
 }
 
-export async function readHealth(): Promise<HealthResult> {
-  const latest = await readLatestMetric();
+export async function readHealth(
+  latestReader: () => Promise<Awaited<ReturnType<typeof readLatestMetric>>> = readLatestMetric,
+): Promise<HealthResult> {
+  let latest: Awaited<ReturnType<typeof readLatestMetric>>;
+  try {
+    latest = await latestReader();
+  } catch {
+    return {
+      status: "degraded",
+      at: new Date().toISOString(),
+      uptimeSeconds: Math.floor(process.uptime()),
+      checks: { web: "ok", monitoring: "error", rcon: "unknown" },
+    };
+  }
   const age = latest ? Date.now() - Date.parse(latest.at) : Number.POSITIVE_INFINITY;
   const monitoring = !latest ? "missing" : age > 90_000 ? "stale" : "ok";
   const rcon = !latest ? "unknown" : latest.connected ? "connected" : "disconnected";
@@ -208,7 +220,10 @@ export async function restoreRecoveryExport(value: unknown): Promise<RecoveryRes
   let reloadWarning: string | undefined;
   try {
     for (const command of ["css_groups_reload", "css_overrides_reload", "css_admins_reload"]) {
-      await rcon.executeInternal(command);
+      const response = await rcon.executeInternal(command);
+      if (reloadResponseFailed(response)) {
+        throw new Error(`${command}: ${response.trim()}`);
+      }
     }
   } catch (error) {
     reloadWarning = error instanceof Error ? error.message : String(error);
@@ -219,4 +234,8 @@ export async function restoreRecoveryExport(value: unknown): Promise<RecoveryRes
     configCount: bundle.configs.length,
     reloadWarning,
   };
+}
+
+export function reloadResponseFailed(response: string) {
+  return /unknown command|does not exist|not found|error|failed/i.test(response);
 }

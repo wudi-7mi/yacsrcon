@@ -5,6 +5,7 @@ import { AlertTriangle, Archive, CircleStop, Database, Download, HardDrive, Play
 import { Empty, PageTitle } from "@/components/dashboard/view-primitives";
 import { useApiRequest } from "@/hooks/use-api-request";
 import { ApiError } from "@/lib/api-client";
+import { recoveryPayloadFromExport } from "@/lib/recovery-payload";
 import type { MaintenanceStatus, RecoveryExport, RecoveryResult, ServerLogResult } from "@/lib/types";
 
 type Operation = "start" | "stop" | "restart";
@@ -98,8 +99,8 @@ export function ServerOperationsView({ onUnauthorized }: { onUnauthorized: () =>
 
   async function selectRecovery(file: File | undefined) {
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      setError("恢复包超过 2 MiB 限制。");
+    if (file.size > 16 * 1024 * 1024) {
+      setError("恢复包超过 16 MiB 读取限制。");
       return;
     }
     try {
@@ -121,7 +122,11 @@ export function ServerOperationsView({ onUnauthorized }: { onUnauthorized: () =>
       const result = await request<RecoveryResult>("/api/maintenance/restore", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ operation: "restore", confirm: true, bundle: pendingRecovery }),
+        body: JSON.stringify({
+          operation: "restore",
+          confirm: true,
+          bundle: recoveryPayloadFromExport(pendingRecovery),
+        }),
       });
       setNotice(result.reloadWarning ? `配置已恢复，但热重载失败：${result.reloadWarning}` : "管理员与 CFG 配置已从恢复包应用。");
       setError("");

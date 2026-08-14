@@ -5,7 +5,7 @@ process.env.RCON_PASSWORD ??= "test-rcon-password";
 process.env.ADMIN_PASSWORD ??= "test-admin-password";
 process.env.AUTH_SECRET ??= "test-secret-at-least-32-characters";
 
-const { downsampleMetrics, parseMetricText, summarizeMetrics } = await import(
+const { createNonReentrantTask, downsampleMetrics, parseMetricText, summarizeMetrics } = await import(
   "../lib/metrics.ts"
 );
 
@@ -73,4 +73,25 @@ test("uses the configured high latency threshold", () => {
   ];
   assert.equal(summarizeMetrics(samples, 1000).currentAlert, null);
   assert.equal(summarizeMetrics(samples, 500).currentAlert, "high_latency");
+});
+
+test("does not enqueue another metric task while one is running", async () => {
+  let release!: () => void;
+  const blocked = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let calls = 0;
+  const run = createNonReentrantTask(async () => {
+    calls += 1;
+    if (calls === 1) await blocked;
+  });
+
+  const first = run();
+  assert.equal(await run(), false);
+  assert.equal(calls, 1);
+
+  release();
+  assert.equal(await first, true);
+  assert.equal(await run(), true);
+  assert.equal(calls, 2);
 });

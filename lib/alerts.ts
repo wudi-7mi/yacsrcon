@@ -85,6 +85,21 @@ export function evaluateAlert(
   };
 }
 
+export function settleAlertDelivery(
+  previous: AlertState,
+  next: AlertState,
+  event: AlertEvent | null,
+  delivered: boolean,
+) {
+  if (
+    !delivered &&
+    (event === "recovered" || event === "latency_recovered")
+  ) {
+    return { ...next, active: previous.active };
+  }
+  return next;
+}
+
 async function readAlertState(): Promise<AlertState> {
   try {
     const value = JSON.parse(
@@ -197,7 +212,9 @@ export function processMetricAlert(sample: MetricSample) {
   if (!config.WEBHOOK_URL) return Promise.resolve();
   const operation = alertQueue.then(async () => {
     const previous = await readAlertState();
-    const { state, event } = evaluateAlert(previous, sample, alertSettings());
+    const decision = evaluateAlert(previous, sample, alertSettings());
+    let state = decision.state;
+    const { event } = decision;
     if (event) {
       try {
         await deliverWebhook(event, sample);
@@ -205,6 +222,7 @@ export function processMetricAlert(sample: MetricSample) {
         state.lastSentEvent = event;
         void audit("webhook_alert", { event, delivered: true });
       } catch (error) {
+        state = settleAlertDelivery(previous, state, event, false);
         void audit("webhook_alert", {
           event,
           delivered: false,

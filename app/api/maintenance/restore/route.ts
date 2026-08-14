@@ -7,9 +7,9 @@ import { restoreRecoveryExport } from "@/lib/maintenance";
 
 export async function POST(request: Request) {
   if (!(await isAuthenticated())) return unauthorized();
-  const maximum = 2 * 1024 * 1024;
+  const maximum = 4 * 1024 * 1024;
   if (Number(request.headers.get("content-length") ?? 0) > maximum) {
-    return NextResponse.json({ error: "恢复包超过 2 MiB 限制。" }, { status: 413 });
+    return NextResponse.json({ error: "可恢复配置超过 4 MiB 限制。" }, { status: 413 });
   }
   const reader = request.body?.getReader();
   const chunks: Uint8Array[] = [];
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       size += value.byteLength;
       if (size > maximum) {
         await reader.cancel();
-        return NextResponse.json({ error: "恢复包超过 2 MiB 限制。" }, { status: 413 });
+        return NextResponse.json({ error: "可恢复配置超过 4 MiB 限制。" }, { status: 413 });
       }
       chunks.push(value);
     }

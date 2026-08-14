@@ -186,7 +186,7 @@ export type HealthResult = {
   uptimeSeconds: number;
   checks: {
     web: "ok";
-    monitoring: "ok" | "stale" | "missing";
+    monitoring: "ok" | "stale" | "missing" | "error";
     rcon: "connected" | "disconnected" | "unknown";
   };
 };
@@ -201,6 +201,12 @@ export type RecoveryExport = {
   monitoring: MonitoringResult;
   audit: AuditResult;
   warnings: string[];
+};
+
+export type RecoveryPayload = {
+  format: RecoveryExport["format"];
+  admins: AdminConfiguration;
+  configs: Array<Pick<ManagedCfgDocument, "id" | "content">>;
 };
 
 export type RecoveryResult = {

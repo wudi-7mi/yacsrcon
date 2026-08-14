@@ -202,11 +202,26 @@ declare global {
   var yacsrconMetricSampler: ReturnType<typeof setInterval> | undefined;
 }
 
+export function createNonReentrantTask(task: () => Promise<void>) {
+  let running = false;
+  return async () => {
+    if (running) return false;
+    running = true;
+    try {
+      await task();
+      return true;
+    } finally {
+      running = false;
+    }
+  };
+}
+
 export function startMetricSampler(intervalMs = 30_000) {
   if (globalThis.yacsrconMetricSampler) return;
-  void collectMetric().catch((error) => console.error("Metric collection failed:", error));
+  const run = createNonReentrantTask(collectMetric);
+  void run().catch((error) => console.error("Metric collection failed:", error));
   globalThis.yacsrconMetricSampler = setInterval(() => {
-    void collectMetric().catch((error) => console.error("Metric collection failed:", error));
+    void run().catch((error) => console.error("Metric collection failed:", error));
   }, intervalMs);
   globalThis.yacsrconMetricSampler.unref();
 }

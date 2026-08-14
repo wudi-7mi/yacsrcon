@@ -5,7 +5,7 @@ process.env.RCON_PASSWORD ??= "test-rcon-password";
 process.env.ADMIN_PASSWORD ??= "test-admin-password";
 process.env.AUTH_SECRET ??= "test-secret-at-least-32-characters";
 
-const { evaluateAlert } = await import("../lib/alerts.ts");
+const { evaluateAlert, settleAlertDelivery } = await import("../lib/alerts.ts");
 
 const settings = {
   disconnectSamples: 3,
@@ -61,4 +61,27 @@ test("requires consecutive high latency samples", () => {
   const second = evaluateAlert(first.state, sample(true, 800), settings, 1);
   assert.equal(first.event, null);
   assert.equal(second.event, "high_latency");
+});
+
+test("retries a recovery notification after delivery fails", () => {
+  const active = {
+    ...base,
+    active: "disconnected" as const,
+    disconnectedSamples: 3,
+    lastSentAt: new Date(0).toISOString(),
+    lastSentEvent: "disconnected" as const,
+  };
+  const first = evaluateAlert(active, sample(true, 30), settings, 1000);
+  assert.equal(first.event, "recovered");
+
+  const afterFailure = settleAlertDelivery(
+    active,
+    first.state,
+    first.event,
+    false,
+  );
+  assert.equal(afterFailure.active, "disconnected");
+
+  const retry = evaluateAlert(afterFailure, sample(true, 30), settings, 2000);
+  assert.equal(retry.event, "recovered");
 });
