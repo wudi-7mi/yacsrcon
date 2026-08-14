@@ -12,6 +12,7 @@ const ACTIONS = [
   ["player_punishment", "玩家处罚"],
   ["admin_configuration_updated", "权限配置"],
   ["cfg_updated", "服务器配置"],
+  ["plugin_configuration_updated", "插件配置"],
   ["webhook_alert", "Webhook 告警"],
   ["recovery_export", "恢复包导出"],
   ["recovery_restore", "恢复包应用"],
@@ -24,6 +25,7 @@ const ACTION_LABELS: Record<string, string> = {
   player_punishment: "玩家处罚",
   admin_configuration_updated: "权限配置更新",
   cfg_updated: "服务器配置更新",
+  plugin_configuration_updated: "插件配置更新",
   webhook_alert: "Webhook 告警",
   recovery_export: "恢复包导出",
   recovery_restore: "恢复包应用",
@@ -178,6 +180,9 @@ function auditSummary(entry: AuditEntry) {
   if (entry.action === "cfg_updated") {
     const operations: Record<string, string> = { write: "保存", restore: "回滚" };
     return `${operations[String(entry.operation)] ?? String(entry.operation)} ${String(entry.filename ?? entry.configId ?? "配置文件")}`;
+  }
+  if (entry.action === "plugin_configuration_updated") {
+    return `${String(entry.plugin ?? "插件")} · ${String(entry.messageCount ?? 0)} 条内容`;
   }
   if (entry.action === "webhook_alert") {
     return `${entry.delivered ? "已发送" : "发送失败"}：${String(entry.event ?? "告警")}`;

@@ -62,20 +62,22 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
   const [adminDraft, setAdminDraft] = useState<AdminConfiguration | null>(null);
   const [configDirty, setConfigDirty] = useState(false);
   const [configDraft, setConfigDraft] = useState("");
+  const [pluginDirty, setPluginDirty] = useState(false);
+  const [pluginDraft, setPluginDraft] = useState("");
   const [pendingDestination, setPendingDestination] = useState<
     DashboardTab | "logout" | null
   >(null);
 
   useEffect(() => {
-    if (sessionExpired && !adminDirty && !configDirty) router.replace("/login");
-  }, [adminDirty, configDirty, router, sessionExpired]);
+    if (sessionExpired && !adminDirty && !configDirty && !pluginDirty) router.replace("/login");
+  }, [adminDirty, configDirty, pluginDirty, router, sessionExpired]);
 
   const serializedDraft = useMemo(
-    () => configDirty ? configDraft : adminDraft ? JSON.stringify(adminDraft, null, 2) : "",
-    [adminDraft, configDirty, configDraft],
+    () => pluginDirty ? pluginDraft : configDirty ? configDraft : adminDraft ? JSON.stringify(adminDraft, null, 2) : "",
+    [adminDraft, configDirty, configDraft, pluginDirty, pluginDraft],
   );
   const activeDirty =
-    (tab === "admins" && adminDirty) || (tab === "configs" && configDirty);
+    (tab === "admins" && adminDirty) || (tab === "configs" && configDirty) || (tab === "plugins" && pluginDirty);
 
   async function reauthenticate(username: string, password: string) {
     try {
@@ -240,7 +242,7 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
             />
           )}{" "}
           {tab === "plugins" && (
-            <PluginCenterView onUnauthorized={handleUnauthorized} />
+            <PluginCenterView onDirtyChange={setPluginDirty} onDraftChange={setPluginDraft} onUnauthorized={handleUnauthorized} />
           )}{" "}
           {tab === "configs" && (
             <ConfigView
@@ -334,7 +336,7 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
               <div>
                 <h2 className="font-semibold">放弃未保存的更改？</h2>
                 <p className="mt-1 text-sm text-[var(--muted)]">
-                  离开此页面后，当前{tab === "configs" ? "配置文件" : "管理员和权限组"}草稿将无法恢复。
+                  离开此页面后，当前{tab === "configs" ? "配置文件" : tab === "plugins" ? "插件配置" : "管理员和权限组"}草稿将无法恢复。
                 </p>
               </div>
             </div>
@@ -369,7 +371,7 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
       {sessionExpired && activeDirty && serializedDraft && (
         <SessionExpiredDialog
           draft={serializedDraft}
-          draftDescription={tab === "configs" ? "配置文件草稿" : "管理员草稿"}
+          draftDescription={tab === "configs" ? "配置文件草稿" : tab === "plugins" ? "插件配置草稿" : "管理员草稿"}
           copyLabel={tab === "configs" ? "复制 CFG 草稿" : "复制草稿 JSON"}
           onDiscard={() => router.replace("/login")}
           onReauthenticate={reauthenticate}

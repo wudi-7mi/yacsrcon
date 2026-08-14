@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Boxes, CircleOff, PlugZap, RefreshCw, Settings2 } from "lucide-react";
 import { Empty, PageTitle } from "@/components/dashboard/view-primitives";
+import { AnnouncementManager } from "@/components/plugins/announcement-manager";
 import { useApiRequest } from "@/hooks/use-api-request";
 import type { PluginCenterResult, PluginIntegration } from "@/lib/types";
 
@@ -12,11 +13,12 @@ const stateLabels = {
   missing: "未安装",
 } as const;
 
-export function PluginCenterView({ onUnauthorized }: { onUnauthorized: () => void }) {
+export function PluginCenterView({ onDirtyChange, onDraftChange, onUnauthorized }: { onDirtyChange: (dirty: boolean) => void; onDraftChange: (draft: string) => void; onUnauthorized: () => void }) {
   const request = useApiRequest(onUnauthorized);
   const [data, setData] = useState<PluginCenterResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [module, setModule] = useState<string | null>(null);
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -33,6 +35,8 @@ export function PluginCenterView({ onUnauthorized }: { onUnauthorized: () => voi
     return () => clearTimeout(timer);
   }, [load]);
 
+  if (module === "announcement-broadcaster") return <AnnouncementManager onBack={() => setModule(null)} onDirtyChange={onDirtyChange} onDraftChange={onDraftChange} onUnauthorized={onUnauthorized} />;
+
   return <>
     <PageTitle eyebrow="服务器管理 / 插件" title="插件中心" copy="集中查看当前服务器的特色插件，并进入已接入的专用管理功能。" />
     {error && <div className="mb-4 rounded-lg border border-[#6a2930] bg-[#29161a] px-4 py-3 text-sm text-[var(--danger)]">{error}</div>}
@@ -47,12 +51,12 @@ export function PluginCenterView({ onUnauthorized }: { onUnauthorized: () => voi
       </button>
     </div>
     {data?.plugins.length ? <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-      {data.plugins.map((plugin) => <PluginCard key={plugin.id} plugin={plugin} />)}
+      {data.plugins.map((plugin) => <PluginCard key={plugin.id} plugin={plugin} onOpen={plugin.id === "announcement-broadcaster" ? () => setModule(plugin.id) : undefined} />)}
     </div> : <section className="rounded-lg border border-[var(--line)] bg-[var(--panel)]"><Empty icon={Boxes} text={loading ? "正在读取插件状态..." : "没有可识别的插件"} /></section>}
   </>;
 }
 
-function PluginCard({ plugin }: { plugin: PluginIntegration }) {
+function PluginCard({ plugin, onOpen }: { plugin: PluginIntegration; onOpen?: () => void }) {
   const loaded = plugin.state === "loaded";
   return <article className="min-h-48 rounded-lg border border-[var(--line)] bg-[var(--panel)] p-4">
     <div className="flex items-start justify-between gap-3">
@@ -64,7 +68,7 @@ function PluginCard({ plugin }: { plugin: PluginIntegration }) {
     <div className="mt-4 flex items-center gap-2"><h2 className="text-sm font-semibold">{plugin.name}</h2>{plugin.version && <span className="mono text-[10px] text-[var(--muted)]">v{plugin.version}</span>}</div>
     <p className="mt-2 min-h-10 text-xs leading-5 text-[var(--muted)]">{plugin.description}</p>
     <div className="mt-3 flex flex-wrap gap-1.5">{plugin.features.map((feature) => <span key={feature} className="rounded border border-[var(--line)] px-2 py-1 text-[10px] text-[var(--muted)]">{feature}</span>)}</div>
-    <div className="mt-4 flex items-center gap-2 border-t border-[var(--line)] pt-3 text-[10px] text-[var(--muted)]"><Settings2 size={12} />{plugin.managed ? loaded ? "已接入专用管理" : "启用后可管理" : "计划接入"}</div>
+    <div className="mt-4 flex items-center justify-between gap-3 border-t border-[var(--line)] pt-3 text-[10px] text-[var(--muted)]"><span className="flex items-center gap-2"><Settings2 size={12} />{plugin.managed ? loaded ? "已接入专用管理" : "启用后可管理" : "计划接入"}</span>{onOpen && loaded && <button type="button" onClick={onOpen} className="rounded-md border border-[var(--line)] px-2.5 py-1.5 text-xs text-white hover:border-[var(--accent)]">打开管理</button>}</div>
   </article>;
 }
 

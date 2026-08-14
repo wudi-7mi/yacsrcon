@@ -40,6 +40,39 @@ export type PluginCenterResult = {
   counts: Record<PluginInstallState, number>;
 };
 
+export type AnnouncementCondition = {
+  flag: "CS2AB_flag_1" | "CS2AB_flag_2" | "CS2AB_flag_3" | "CS2AB_flag_4" | "CS2AB_flag_5";
+  op: 0 | 1 | 2 | 3;
+  value: number;
+};
+
+export type AnnouncementMessage = {
+  msg: string;
+  admin?: boolean;
+  cond?: AnnouncementCondition;
+  delay?: number;
+  cmd?: string;
+  timer?: number;
+  [key: string]: unknown;
+};
+
+export type AnnouncementConfig = {
+  OnPlayerConnectMsgs: AnnouncementMessage[];
+  OnAdminConnectMsgs: AnnouncementMessage[];
+  OnRoundStartMsgs: AnnouncementMessage[];
+  OnCommandMsgs: AnnouncementMessage[];
+  TimerMsgs: AnnouncementMessage[];
+};
+
+export type AnnouncementDocument = {
+  config: AnnouncementConfig;
+  hash: string;
+  persisted: boolean;
+  modifiedAt: string;
+  backupId?: string;
+  reloadWarning?: string;
+};
+
 export type DashboardData = {
   connected: boolean;
   latencyMs: number | null;

@@ -111,6 +111,53 @@ class AdminHelperTransactionTest(unittest.TestCase):
                     },
                 )
 
+    def test_writes_announcement_config_to_persistent_and_runtime_copies(self):
+        helper = load_helper()
+        with tempfile.TemporaryDirectory() as directory:
+            helper.PLUGIN_ROOT = os.path.join(directory, "runtime")
+            helper.PLUGIN_CUSTOM_ROOT = os.path.join(directory, "custom")
+            helper.PLUGIN_BACKUP_ROOT = os.path.join(directory, "backups")
+            runtime = os.path.join(
+                helper.PLUGIN_ROOT,
+                "CS2AnnouncementBroadcaster",
+                "cfg",
+                "messages.json",
+            )
+            os.makedirs(os.path.dirname(runtime))
+            original = {"OnRoundStartMsgs": [{"msg": "Old"}]}
+            with open(runtime, "w", encoding="utf-8") as handle:
+                json.dump(original, handle)
+            current = helper.read_plugin_config("announcements")
+            changed = {
+                "OnPlayerConnectMsgs": [{"msg": "Hello", "delay": 3}],
+                "OnCommandMsgs": [{"msg": "Help", "cmd": "help"}],
+            }
+            with mock.patch.object(
+                helper.pwd,
+                "getpwnam",
+                return_value=mock.Mock(pw_uid=os.getuid(), pw_gid=os.getgid()),
+            ):
+                result = helper.write_plugin_config(
+                    "announcements", changed, current["hash"]
+                )
+            self.assertTrue(result["persisted"])
+            self.assertEqual(result["config"]["OnCommandMsgs"][0]["cmd"], "help")
+            source, runtime = helper.plugin_config_paths("announcements")
+            for path in (source, runtime):
+                with open(path, encoding="utf-8") as handle:
+                    self.assertEqual(json.load(handle), result["config"])
+            self.assertEqual(
+                len(os.listdir(os.path.join(helper.PLUGIN_BACKUP_ROOT, "announcements"))),
+                1,
+            )
+
+    def test_rejects_invalid_announcement_commands(self):
+        helper = load_helper()
+        with self.assertRaises(SystemExit):
+            helper.validate_announcement_config(
+                {"OnCommandMsgs": [{"msg": "Bad", "cmd": "quit;exec"}]}
+            )
+
     def test_parses_only_supported_server_environment_keys(self):
         helper = load_helper()
         with tempfile.TemporaryDirectory() as directory:

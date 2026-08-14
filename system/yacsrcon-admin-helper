@@ -44,6 +44,15 @@ CFG_BACKUP_DIR = "/home/steam/cs2/custom_files/backups/yacsrcon-cfg"
 CFG_LOCK_FILE = "/run/yacsrcon-cs2-cfg.lock"
 CFG_BACKUP_LIMIT = 50
 PLUGIN_ROOT = "/home/steam/cs2/game/csgo/addons/counterstrikesharp/plugins"
+PLUGIN_CUSTOM_ROOT = "/home/steam/cs2/custom_files/addons/counterstrikesharp/plugins"
+PLUGIN_BACKUP_ROOT = "/home/steam/cs2/custom_files/backups/yacsrcon-plugins"
+PLUGIN_CONFIG_LOCK_FILE = "/run/yacsrcon-plugin-config.lock"
+PLUGIN_CONFIG_FILES = {
+    "announcements": {
+        "relative": "CS2AnnouncementBroadcaster/cfg/messages.json",
+        "maximum": 256 * 1024,
+    },
+}
 CFG_FILES = {
     "server": {"filename": "server.cfg", "label": "服务器主配置"},
     "boot": {"filename": "on_boot.cfg", "label": "启动后配置"},
@@ -562,6 +571,211 @@ def plugin_directories():
     }
 
 
+def validate_announcement_config(value):
+    require_object(value, "公告配置")
+    definitions = {
+        "OnPlayerConnectMsgs": "connect",
+        "OnAdminConnectMsgs": "connect",
+        "OnRoundStartMsgs": "base",
+        "OnCommandMsgs": "command",
+        "TimerMsgs": "timer",
+    }
+    if any(key not in definitions for key in value):
+        fail("公告配置包含不支持的消息类型")
+    result = {}
+    for key, kind in definitions.items():
+        messages = value.get(key, [])
+        if not isinstance(messages, list) or len(messages) > 200:
+            fail(f"{key} 消息数量无效")
+        for message in messages:
+            require_object(message, f"{key} 消息")
+            body = message.get("msg")
+            if not isinstance(body, str) or not body or len(body) > 4000 or "\x00" in body:
+                fail(f"{key} 消息正文无效")
+            if "admin" in message and not isinstance(message["admin"], bool):
+                fail(f"{key} 管理员选项无效")
+            condition = message.get("cond")
+            if condition is not None:
+                require_object(condition, f"{key} 条件")
+                if (
+                    condition.get("flag") not in {f"CS2AB_flag_{number}" for number in range(1, 6)}
+                    or condition.get("op") not in (0, 1, 2, 3)
+                    or not isinstance(condition.get("value"), int)
+                    or isinstance(condition.get("value"), bool)
+                    or not -1000000 <= condition["value"] <= 1000000
+                ):
+                    fail(f"{key} 条件无效")
+            if kind == "connect" and (
+                "delay" in message
+                and (not isinstance(message["delay"], (int, float)) or isinstance(message["delay"], bool) or not -1 <= message["delay"] <= 3600)
+            ):
+                fail(f"{key} 延迟无效")
+            if kind == "command" and (
+                not isinstance(message.get("cmd"), str)
+                or not re.fullmatch(r"[a-zA-Z0-9_-]{1,32}", message["cmd"])
+            ):
+                fail(f"{key} 命令无效")
+            if kind == "timer" and (
+                not isinstance(message.get("timer"), (int, float))
+                or isinstance(message.get("timer"), bool)
+                or not 1 <= message["timer"] <= 86400
+            ):
+                fail(f"{key} 定时间隔无效")
+        result[key] = messages
+    return result
+
+
+def plugin_config_definition(config_id):
+    if not isinstance(config_id, str) or config_id not in PLUGIN_CONFIG_FILES:
+        fail("插件配置 ID 不受支持")
+    return PLUGIN_CONFIG_FILES[config_id]
+
+
+def plugin_config_paths(config_id):
+    relative = plugin_config_definition(config_id)["relative"]
+    return os.path.join(PLUGIN_CUSTOM_ROOT, relative), os.path.join(PLUGIN_ROOT, relative)
+
+
+def validate_plugin_config(config_id, value):
+    if config_id == "announcements":
+        value = validate_announcement_config(value)
+    encoded = json.dumps(value, ensure_ascii=False).encode("utf-8")
+    if len(encoded) > plugin_config_definition(config_id)["maximum"]:
+        fail("插件配置超过大小限制")
+    return value
+
+
+def read_plugin_config(config_id):
+    source, runtime = plugin_config_paths(config_id)
+    path = source if os.path.exists(source) else runtime
+    descriptor = safe_regular_file(path)
+    with os.fdopen(descriptor, encoding="utf-8") as handle:
+        value = validate_plugin_config(config_id, json.load(handle))
+    metadata = os.stat(path, follow_symlinks=False)
+    return {
+        "config": value,
+        "hash": cfg_hash(json.dumps(value, sort_keys=True, ensure_ascii=False)),
+        "persisted": path == source,
+        "modifiedAt": datetime.datetime.fromtimestamp(metadata.st_mtime, datetime.UTC).isoformat(),
+    }
+
+
+def ensure_plugin_config_directories(config_id):
+    steam = pwd.getpwnam(STEAM_USER)
+    source, runtime = plugin_config_paths(config_id)
+    if not stat.S_ISREG(os.lstat(runtime).st_mode):
+        fail("插件运行配置不是普通文件")
+    for directory in (os.path.dirname(source), PLUGIN_BACKUP_ROOT, os.path.join(PLUGIN_BACKUP_ROOT, config_id)):
+        os.makedirs(directory, mode=0o750, exist_ok=True)
+        if not stat.S_ISDIR(os.lstat(directory).st_mode):
+            fail("插件配置目录不是普通目录")
+        os.chown(directory, steam.pw_uid, steam.pw_gid)
+        os.chmod(directory, 0o750)
+    return steam.pw_uid, steam.pw_gid
+
+
+def atomic_json_write(path, value, uid, gid):
+    parent = os.path.dirname(path)
+    descriptor, temporary = tempfile.mkstemp(prefix=".yacsrcon-plugin-", dir=parent)
+    try:
+        os.fchown(descriptor, uid, gid)
+        os.fchmod(descriptor, 0o640)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            json.dump(value, handle, indent=2, ensure_ascii=False)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        if os.path.lexists(path) and not stat.S_ISREG(os.lstat(path).st_mode):
+            fail("插件配置目标不是普通文件")
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+@contextmanager
+def plugin_config_lock():
+    descriptor = os.open(PLUGIN_CONFIG_LOCK_FILE, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_uid != os.geteuid():
+            fail("插件配置锁文件不安全")
+        os.fchmod(descriptor, 0o600)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            fail("已有插件配置操作正在进行")
+        yield
+    finally:
+        os.close(descriptor)
+
+
+def write_plugin_config(config_id, value, expected_hash):
+    value = validate_plugin_config(config_id, value)
+    current = read_plugin_config(config_id)
+    if not isinstance(expected_hash, str) or expected_hash != current["hash"]:
+        fail("插件配置已被其他操作修改，请刷新后重试")
+    uid, gid = ensure_plugin_config_directories(config_id)
+    source, runtime = plugin_config_paths(config_id)
+    backup_id = datetime.datetime.now(datetime.UTC).strftime("%Y%m%dT%H%M%S.%fZ")
+    backup = os.path.join(PLUGIN_BACKUP_ROOT, config_id, f"{backup_id}.json")
+    atomic_json_write(backup, current["config"], uid, gid)
+    original_source = None
+    original_runtime = None
+    if os.path.exists(source):
+        with os.fdopen(safe_regular_file(source), encoding="utf-8") as handle:
+            original_source = json.load(handle)
+    if os.path.exists(runtime):
+        with os.fdopen(safe_regular_file(runtime), encoding="utf-8") as handle:
+            original_runtime = json.load(handle)
+    try:
+        atomic_json_write(source, value, uid, gid)
+        atomic_json_write(runtime, value, uid, gid)
+    except Exception as write_error:
+        rollback_failures = []
+        for path, original in ((source, original_source), (runtime, original_runtime)):
+            try:
+                if original is None:
+                    if os.path.lexists(path):
+                        os.unlink(path)
+                else:
+                    atomic_json_write(path, original, uid, gid)
+            except Exception as rollback_error:
+                rollback_failures.append(f"{path}: {rollback_error}")
+        if rollback_failures:
+            raise RuntimeError(
+                f"插件配置写入失败且自动回滚不完整：{write_error}; "
+                + "; ".join(rollback_failures)
+                + f"; 备份 ID {backup_id}"
+            ) from write_error
+        raise RuntimeError(f"插件配置写入失败，已恢复原配置：{write_error}") from write_error
+    backups = sorted(
+        (
+            filename
+            for filename in os.listdir(os.path.dirname(backup))
+            if re.fullmatch(r"\d{8}T\d{6}\.\d{6}Z\.json", filename)
+        ),
+        reverse=True,
+    )
+    for filename in backups[50:]:
+        os.unlink(os.path.join(os.path.dirname(backup), filename))
+    return {**read_plugin_config(config_id), "backupId": backup_id}
+
+
+def plugin_config_operation(value):
+    require_object(value, "插件配置操作")
+    config_id = value.get("id")
+    operation = value.get("operation")
+    if operation == "read":
+        drop_to_steam()
+        return read_plugin_config(config_id)
+    if operation != "write":
+        fail("插件配置操作不受支持")
+    with plugin_config_lock():
+        drop_to_steam()
+        return write_plugin_config(config_id, value.get("config"), value.get("expectedHash"))
+
+
 def cfg_operation(value):
     require_object(value, "CFG 操作")
     operation = value.get("operation")
@@ -770,7 +984,7 @@ def apply_config(data):
 
 
 def main():
-    actions = ("read", "apply", "bans", "cfg", "plugins", "storage-status", "server-status", "server-logs", "server-start", "server-stop", "server-restart")
+    actions = ("read", "apply", "bans", "cfg", "plugins", "plugin-config", "storage-status", "server-status", "server-logs", "server-start", "server-stop", "server-restart")
     if len(sys.argv) != 2 or sys.argv[1] not in actions:
         fail("不支持的辅助程序操作")
 
@@ -791,6 +1005,15 @@ def main():
         print(json.dumps(storage_status(), ensure_ascii=False))
     elif sys.argv[1] == "plugins":
         print(json.dumps(plugin_directories(), ensure_ascii=False))
+    elif sys.argv[1] == "plugin-config":
+        raw = sys.stdin.buffer.read(1024 * 1024 + 1)
+        if len(raw) > 1024 * 1024:
+            fail("插件配置操作输入超过限制")
+        try:
+            value = json.loads(raw)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            fail(str(error))
+        print(json.dumps(plugin_config_operation(value), ensure_ascii=False))
     elif sys.argv[1] == "server-status":
         print(json.dumps(server_status(), ensure_ascii=False))
     elif sys.argv[1] == "server-logs":
