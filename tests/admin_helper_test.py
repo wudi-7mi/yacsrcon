@@ -93,6 +93,24 @@ class AdminHelperTransactionTest(unittest.TestCase):
             )
             self.assertEqual(os.stat(database_path).st_mtime_ns, before)
 
+    def test_lists_only_real_plugin_directories(self):
+        helper = load_helper()
+        with tempfile.TemporaryDirectory() as directory:
+            helper.PLUGIN_ROOT = directory
+            disabled = os.path.join(directory, "disabled")
+            os.makedirs(disabled)
+            os.makedirs(os.path.join(directory, "ActivePlugin"))
+            os.makedirs(os.path.join(disabled, "DisabledPlugin"))
+            os.symlink("ActivePlugin", os.path.join(directory, "LinkedPlugin"))
+            with mock.patch.object(helper, "drop_to_steam"):
+                self.assertEqual(
+                    helper.plugin_directories(),
+                    {
+                        "active": ["ActivePlugin"],
+                        "disabled": ["DisabledPlugin"],
+                    },
+                )
+
     def test_parses_only_supported_server_environment_keys(self):
         helper = load_helper()
         with tempfile.TemporaryDirectory() as directory:

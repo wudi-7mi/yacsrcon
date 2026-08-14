@@ -43,6 +43,7 @@ CFG_RUNTIME_DIR = "/home/steam/cs2/game/csgo/cfg"
 CFG_BACKUP_DIR = "/home/steam/cs2/custom_files/backups/yacsrcon-cfg"
 CFG_LOCK_FILE = "/run/yacsrcon-cs2-cfg.lock"
 CFG_BACKUP_LIMIT = 50
+PLUGIN_ROOT = "/home/steam/cs2/game/csgo/addons/counterstrikesharp/plugins"
 CFG_FILES = {
     "server": {"filename": "server.cfg", "label": "服务器主配置"},
     "boot": {"filename": "on_boot.cfg", "label": "启动后配置"},
@@ -540,6 +541,27 @@ def storage_status():
     }
 
 
+def plugin_directories():
+    drop_to_steam()
+    disabled_path = os.path.join(PLUGIN_ROOT, "disabled")
+
+    def directories(parent, skip_disabled=False):
+        if not stat.S_ISDIR(os.lstat(parent).st_mode):
+            fail("CounterStrikeSharp 插件目录不可用")
+        return sorted(
+            entry.name
+            for entry in os.scandir(parent)
+            if entry.is_dir(follow_symlinks=False)
+            and not entry.is_symlink()
+            and (not skip_disabled or entry.name != "disabled")
+        )
+
+    return {
+        "active": directories(PLUGIN_ROOT, True),
+        "disabled": directories(disabled_path),
+    }
+
+
 def cfg_operation(value):
     require_object(value, "CFG 操作")
     operation = value.get("operation")
@@ -748,7 +770,7 @@ def apply_config(data):
 
 
 def main():
-    actions = ("read", "apply", "bans", "cfg", "storage-status", "server-status", "server-logs", "server-start", "server-stop", "server-restart")
+    actions = ("read", "apply", "bans", "cfg", "plugins", "storage-status", "server-status", "server-logs", "server-start", "server-stop", "server-restart")
     if len(sys.argv) != 2 or sys.argv[1] not in actions:
         fail("不支持的辅助程序操作")
 
@@ -767,6 +789,8 @@ def main():
         print(json.dumps(cfg_operation(value), ensure_ascii=False))
     elif sys.argv[1] == "storage-status":
         print(json.dumps(storage_status(), ensure_ascii=False))
+    elif sys.argv[1] == "plugins":
+        print(json.dumps(plugin_directories(), ensure_ascii=False))
     elif sys.argv[1] == "server-status":
         print(json.dumps(server_status(), ensure_ascii=False))
     elif sys.argv[1] == "server-logs":

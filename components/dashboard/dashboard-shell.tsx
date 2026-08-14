@@ -13,6 +13,7 @@ import {
   LogOut,
   Map,
   Menu,
+  Puzzle,
   RefreshCw,
   Server,
   ServerCog,
@@ -28,6 +29,7 @@ import {
   MapsView,
   OverviewView,
   PlayersView,
+  PluginCenterView,
   MonitoringView,
   ServerOperationsView,
 } from "@/components/dashboard/views";
@@ -122,6 +124,7 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
     { id: "overview", label: "服务器概览", icon: Activity },
     { id: "players", label: "玩家管理", icon: Users },
     { id: "maps", label: "地图与模式", icon: Map },
+    { id: "plugins", label: "插件中心", icon: Puzzle },
     { id: "admins", label: "管理员与权限", icon: ShieldCheck },
     { id: "configs", label: "配置文件", icon: FileCode2 },
     { id: "monitoring", label: "运行监控", icon: ChartNoAxesCombined },
@@ -235,6 +238,9 @@ export default function Dashboard({ catalog }: { catalog: ServerCatalog }) {
               onDraftChange={setAdminDraft}
               onUnauthorized={handleUnauthorized}
             />
+          )}{" "}
+          {tab === "plugins" && (
+            <PluginCenterView onUnauthorized={handleUnauthorized} />
           )}{" "}
           {tab === "configs" && (
             <ConfigView

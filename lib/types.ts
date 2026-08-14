@@ -22,6 +22,24 @@ export type Player = {
 
 export type PluginInfo = { name: string; version?: string; state?: string };
 
+export type PluginInstallState = "loaded" | "disabled" | "missing";
+
+export type PluginIntegration = {
+  id: string;
+  directory: string;
+  name: string;
+  description: string;
+  state: PluginInstallState;
+  version?: string;
+  features: string[];
+  managed: boolean;
+};
+
+export type PluginCenterResult = {
+  plugins: PluginIntegration[];
+  counts: Record<PluginInstallState, number>;
+};
+
 export type DashboardData = {
   connected: boolean;
   latencyMs: number | null;
