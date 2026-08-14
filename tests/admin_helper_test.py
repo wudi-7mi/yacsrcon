@@ -240,6 +240,45 @@ class AdminHelperTransactionTest(unittest.TestCase):
                 }
             )
 
+    def test_reads_only_fixed_game_mode_controls_and_paired_settings(self):
+        helper = load_helper()
+        with tempfile.TemporaryDirectory() as directory:
+            helper.GAME_MODE_MANAGER_CONFIG = os.path.join(directory, "GameModeManager.json")
+            helper.GAME_SETTINGS_DIR = os.path.join(directory, "settings")
+            os.makedirs(helper.GAME_SETTINGS_DIR)
+            with open(helper.GAME_MODE_MANAGER_CONFIG, "w", encoding="utf-8") as handle:
+                json.dump(
+                    {
+                        "Version": 12,
+                        "RTV": {
+                            "Enabled": True,
+                            "VoteDuration": 45,
+                            "MaxExtends": 3,
+                            "EndOfMapVote": True,
+                            "IncludeModes": False,
+                            "Secret": "not exposed",
+                        },
+                        "Warmup": {
+                            "Enabled": False,
+                            "Time": 0,
+                            "List": [{"Name": "DM", "Config": "warmup/dm.cfg"}],
+                        },
+                    },
+                    handle,
+                )
+            for state in ("enable", "disable"):
+                with open(os.path.join(helper.GAME_SETTINGS_DIR, f"{state}_bots.cfg"), "w", encoding="utf-8") as handle:
+                    handle.write("bot_quota 5\n")
+            with open(os.path.join(helper.GAME_SETTINGS_DIR, "enable_surf.cfg"), "w", encoding="utf-8") as handle:
+                handle.write("sv_airaccelerate 150\n")
+            with mock.patch.object(helper, "drop_to_steam"):
+                result = helper.game_mode_manager_status()
+            self.assertEqual(result["version"], 12)
+            self.assertEqual(result["rtv"]["duration"], 45)
+            self.assertNotIn("Secret", result["rtv"])
+            self.assertEqual(result["settings"], ["bots"])
+            self.assertEqual(result["warmup"]["modes"], [{"name": "DM", "config": "warmup/dm.cfg"}])
+
     def test_parses_only_supported_server_environment_keys(self):
         helper = load_helper()
         with tempfile.TemporaryDirectory() as directory:

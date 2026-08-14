@@ -49,6 +49,14 @@ PLUGIN_CONFIG_ROOT = "/home/steam/cs2/game/csgo/addons/counterstrikesharp/config
 PLUGIN_CUSTOM_CONFIG_ROOT = "/home/steam/cs2/custom_files/addons/counterstrikesharp/configs/plugins"
 PLUGIN_BACKUP_ROOT = "/home/steam/cs2/custom_files/backups/yacsrcon-plugins"
 PLUGIN_CONFIG_LOCK_FILE = "/run/yacsrcon-plugin-config.lock"
+GAME_MODE_MANAGER_CONFIG = os.path.join(PLUGIN_CONFIG_ROOT, "GameModeManager", "GameModeManager.json")
+GAME_SETTINGS_DIR = os.path.join(CFG_RUNTIME_DIR, "settings")
+GAME_SETTING_IDS = (
+    "autobhop", "bhop", "bots", "buying", "course", "course_settings",
+    "custom_player_models", "dice", "fun", "knifedrop", "movement_unlock",
+    "one_round", "random_round", "random_spawns", "revive", "scoutz",
+    "spectator_list", "surf", "teleport_kill", "warcraft", "weapon_speed",
+)
 PLUGIN_CONFIG_FILES = {
     "announcements": {
         "relative": "CS2AnnouncementBroadcaster/cfg/messages.json",
@@ -786,6 +794,49 @@ def load_json_with_comments(handle):
     return json.loads("".join(output))
 
 
+def game_mode_manager_status():
+    drop_to_steam()
+    with os.fdopen(safe_regular_file(GAME_MODE_MANAGER_CONFIG), encoding="utf-8") as handle:
+        value = load_json_with_comments(handle)
+    require_object(value, "GameModeManager 配置")
+    rtv = value.get("RTV")
+    warmup = value.get("Warmup")
+    require_object(rtv, "GameModeManager RTV 配置")
+    require_object(warmup, "GameModeManager 暖场配置")
+    warmup_modes = warmup.get("List", [])
+    if not isinstance(warmup_modes, list):
+        fail("GameModeManager 暖场模式无效")
+    modes = []
+    for item in warmup_modes:
+        if isinstance(item, dict) and isinstance(item.get("Name"), str) and isinstance(item.get("Config"), str):
+            modes.append({"name": item["Name"], "config": item["Config"]})
+    settings = []
+    for setting_id in GAME_SETTING_IDS:
+        enabled = os.path.join(GAME_SETTINGS_DIR, f"enable_{setting_id}.cfg")
+        disabled = os.path.join(GAME_SETTINGS_DIR, f"disable_{setting_id}.cfg")
+        if os.path.exists(enabled) and os.path.exists(disabled):
+            for path in (enabled, disabled):
+                descriptor = safe_regular_file(path)
+                os.close(descriptor)
+            settings.append(setting_id)
+    return {
+        "version": value.get("Version"),
+        "rtv": {
+            "enabled": rtv.get("Enabled"),
+            "duration": rtv.get("VoteDuration"),
+            "maxExtends": rtv.get("MaxExtends"),
+            "endOfMapVote": rtv.get("EndOfMapVote"),
+            "includeModes": rtv.get("IncludeModes"),
+        },
+        "warmup": {
+            "enabled": warmup.get("Enabled"),
+            "time": warmup.get("Time"),
+            "modes": modes,
+        },
+        "settings": settings,
+    }
+
+
 def read_plugin_config(config_id):
     source, runtime = plugin_config_paths(config_id)
     path = source if os.path.exists(source) else runtime
@@ -1125,7 +1176,7 @@ def apply_config(data):
 
 
 def main():
-    actions = ("read", "apply", "bans", "cfg", "plugins", "plugin-config", "storage-status", "server-status", "server-logs", "server-start", "server-stop", "server-restart")
+    actions = ("read", "apply", "bans", "cfg", "plugins", "plugin-config", "game-mode", "storage-status", "server-status", "server-logs", "server-start", "server-stop", "server-restart")
     if len(sys.argv) != 2 or sys.argv[1] not in actions:
         fail("不支持的辅助程序操作")
 
@@ -1155,6 +1206,8 @@ def main():
         except (json.JSONDecodeError, UnicodeDecodeError) as error:
             fail(str(error))
         print(json.dumps(plugin_config_operation(value), ensure_ascii=False))
+    elif sys.argv[1] == "game-mode":
+        print(json.dumps(game_mode_manager_status(), ensure_ascii=False))
     elif sys.argv[1] == "server-status":
         print(json.dumps(server_status(), ensure_ascii=False))
     elif sys.argv[1] == "server-logs":

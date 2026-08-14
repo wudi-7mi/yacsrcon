@@ -13,6 +13,7 @@ const ACTIONS = [
   ["admin_configuration_updated", "权限配置"],
   ["cfg_updated", "服务器配置"],
   ["plugin_configuration_updated", "插件配置"],
+  ["plugin_control", "插件控制"],
   ["webhook_alert", "Webhook 告警"],
   ["recovery_export", "恢复包导出"],
   ["recovery_restore", "恢复包应用"],
@@ -26,6 +27,7 @@ const ACTION_LABELS: Record<string, string> = {
   admin_configuration_updated: "权限配置更新",
   cfg_updated: "服务器配置更新",
   plugin_configuration_updated: "插件配置更新",
+  plugin_control: "插件即时控制",
   webhook_alert: "Webhook 告警",
   recovery_export: "恢复包导出",
   recovery_restore: "恢复包应用",
@@ -184,6 +186,9 @@ function auditSummary(entry: AuditEntry) {
   if (entry.action === "plugin_configuration_updated") {
     const count = entry.voteCount != null ? `${String(entry.voteCount)} 个投票` : `${String(entry.messageCount ?? 0)} 条内容`;
     return `${String(entry.plugin ?? "插件")} · ${count}`;
+  }
+  if (entry.action === "plugin_control") {
+    return `${String(entry.plugin ?? "插件")} · ${String(entry.operation ?? "操作")}`;
   }
   if (entry.action === "webhook_alert") {
     return `${entry.delivered ? "已发送" : "发送失败"}：${String(entry.event ?? "告警")}`;

@@ -108,6 +108,29 @@ export type CustomVotesDocument = {
   reloadWarning?: string;
 };
 
+export type GameModeManagerStatus = {
+  version: number;
+  rtv: {
+    enabled: boolean;
+    duration: number;
+    maxExtends: number;
+    endOfMapVote: boolean;
+    includeModes: boolean;
+  };
+  warmup: {
+    enabled: boolean;
+    time: number;
+    modes: Array<{ name: string; config: string }>;
+  };
+  settings: string[];
+};
+
+export type PluginActionResult = {
+  ok: true;
+  command: string;
+  response: string;
+};
+
 export type DashboardData = {
   connected: boolean;
   latencyMs: number | null;

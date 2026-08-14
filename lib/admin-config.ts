@@ -75,7 +75,8 @@ export async function runAdminHelper(
     | "server-restart"
     | "storage-status"
     | "plugins"
-    | "plugin-config",
+    | "plugin-config"
+    | "game-mode",
   input?: string,
 ) {
   return new Promise<{ stdout: string }>((resolve, reject) => {
